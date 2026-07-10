@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: shops88-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: shops88
+      POSTGRES_PASSWORD: shops88_password
+      POSTGRES_DB: shops88
+    ports:
+      - "5433:5432"
+    volumes:
+      - shops88_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  shops88_postgres_data:

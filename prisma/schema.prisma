@@ -234,7 +234,7 @@ model UserCustomization {
   id                  String   @id @default(cuid())
   userId              String   @unique
   nicknameColor       String   @default("#F4F0E8")
-  emoji               String   @default("✦")
+  emoji               String   @default("star")
   avatarFrame         String   @default("none")
   animatedFrameFuture Boolean  @default(false)
   animatedCoverFuture Boolean  @default(false)

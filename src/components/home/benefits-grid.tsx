@@ -1,36 +1,31 @@
-import { BadgeCheck, Handshake, MessageCircle, ShieldCheck, Tags } from "lucide-react";
+import { BadgeCheck, Handshake, Tags, UserRoundCheck } from "lucide-react";
 
 const benefits = [
   {
-    title: "Проверенные продавцы",
-    description: "Магазины и пользователи с репутацией, отзывами и историей сделок.",
-    icon: BadgeCheck,
+    title: "Один профиль для всего",
+    description: "Покупай, продавай и развивай свой магазин.",
+    icon: UserRoundCheck,
   },
   {
-    title: "Original / Replica",
-    description: "Маркировка вынесена в карточки, чтобы не прятать важный контекст.",
+    title: "Original и Replica отдельно",
+    description: "Ты всегда понимаешь, что именно смотришь.",
     icon: Tags,
   },
   {
-    title: "Личная встреча",
-    description: "Осмотр вещи и передача вживую остаются базовым сценарием MVP.",
+    title: "Выбирай способ сделки",
+    description: "Встречайся лично или договаривайся напрямую.",
     icon: Handshake,
   },
   {
-    title: "Безопасная сделка позже",
-    description: "UI готов, но реальные платежи и escrow пока не подключены.",
-    icon: ShieldCheck,
-  },
-  {
-    title: "Быстрый контакт",
-    description: "Сейчас это placeholder, дальше подключается серверная авторизация и чат.",
-    icon: MessageCircle,
+    title: "Репутация имеет значение",
+    description: "Отзывы и история профиля помогают принимать решение.",
+    icon: BadgeCheck,
   },
 ];
 
 export function BenefitsGrid() {
   return (
-    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
       {benefits.map((benefit) => {
         const Icon = benefit.icon;
 

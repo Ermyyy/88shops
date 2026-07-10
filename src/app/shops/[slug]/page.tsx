@@ -16,6 +16,7 @@ import {
   getUserById,
   shops,
 } from "@/lib/mock-data";
+import { hasSessionCookie } from "@/lib/auth";
 import { formatDate } from "@/lib/utils";
 
 type ShopPageProps = {
@@ -55,6 +56,7 @@ export default async function ShopPage({ params }: ShopPageProps) {
 
   const products = getProductsByShop(shop.id);
   const reviews = getReviewsForShop(shop.id);
+  const isAuthenticated = await hasSessionCookie();
 
   return (
     <div className="pb-14">
@@ -94,7 +96,7 @@ export default async function ShopPage({ params }: ShopPageProps) {
                 </p>
               </div>
             </div>
-            <ShopActions />
+            <ShopActions isAuthenticated={isAuthenticated} />
           </div>
         </div>
       </section>
@@ -105,7 +107,7 @@ export default async function ShopPage({ params }: ShopPageProps) {
           <Metric icon={<ShoppingBag className="h-4 w-4" />} label="Продажи" value={shop.salesCount} />
           <Metric icon={<Package className="h-4 w-4" />} label="Товары" value={products.length} />
           <Metric icon={<CalendarDays className="h-4 w-4" />} label="На платформе" value={formatDate(shop.createdAt)} />
-          <Metric icon={<MessageCircle className="h-4 w-4" />} label="Контакт" value="Telegram placeholder" />
+          <Metric icon={<MessageCircle className="h-4 w-4" />} label="Контакт" value="Чат скоро" />
         </div>
 
         <Tabs
@@ -117,7 +119,11 @@ export default async function ShopPage({ params }: ShopPageProps) {
               content: (
                 <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   {products.map((product) => (
-                    <ProductCard key={product.id} product={product} />
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      isAuthenticated={isAuthenticated}
+                    />
                   ))}
                 </div>
               ),
@@ -158,9 +164,8 @@ export default async function ShopPage({ params }: ShopPageProps) {
                 <div className="max-w-3xl rounded-[8px] border border-white/10 bg-white/[0.04] p-6">
                   <h2 className="text-2xl font-semibold text-cream">Профиль магазина</h2>
                   <p className="mt-4 text-sm leading-7 text-cream/60">
-                    {shop.description} В production-версии здесь появятся
-                    подтвержденные контакты, правила возврата, расширенная
-                    репутация и серверная модерация профиля.
+                    {shop.description} Скоро здесь появятся контакты, правила возврата
+                    и расширенная информация о магазине.
                   </p>
                 </div>
               ),

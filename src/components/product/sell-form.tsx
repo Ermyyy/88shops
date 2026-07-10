@@ -46,7 +46,6 @@ export function SellForm() {
     setValue,
     control,
     formState: { errors },
-    reset,
   } = useForm<SellFormValues>({
     resolver: zodResolver(sellFormSchema) as Resolver<SellFormValues>,
     defaultValues,
@@ -85,7 +84,7 @@ export function SellForm() {
       "image/webp": [".webp"],
     },
     onDropRejected: () =>
-      toast("Фото не прошло проверку: нужен JPEG, PNG или WebP до 6 МБ."),
+      toast("Фото не подходит: нужен JPEG, PNG или WebP до 6 МБ."),
   });
 
   const removePhoto = (name: string) => {
@@ -99,8 +98,7 @@ export function SellForm() {
   const onSubmit = async () => {
     setSubmitting(true);
     await new Promise((resolve) => window.setTimeout(resolve, 500));
-    toast("Demo: объявление прошло локальную валидацию. В базу оно не сохранено.");
-    reset(defaultValues);
+    toast("Публикация скоро появится. Данные формы проверены.");
     setSubmitting(false);
   };
 
@@ -119,8 +117,7 @@ export function SellForm() {
               {isDragActive ? "Отпустите файлы здесь" : "Перетащите фото или выберите файлы"}
             </p>
             <p className="mt-2 max-w-md text-sm leading-6 text-cream/50">
-              До 6 изображений, JPEG/PNG/WebP, максимум 6 МБ каждое. Загрузка в
-              облако в MVP не выполняется.
+              Первое фото станет обложкой объявления.
             </p>
           </div>
           {errors.photos ? (
@@ -228,7 +225,7 @@ export function SellForm() {
               <textarea
                 {...register("description")}
                 rows={7}
-                placeholder="Состояние, посадка, комплект, нюансы, где удобно встретиться..."
+                placeholder="Расскажи о состоянии, комплекте и возможных нюансах."
                 className="w-full rounded-[8px] border border-white/10 bg-white/[0.055] px-4 py-3 text-sm text-cream outline-none transition placeholder:text-cream/38 focus:border-lime/70"
               />
             </Field>
@@ -262,16 +259,14 @@ export function SellForm() {
 
         <div className="rounded-[8px] border border-lime/20 bg-lime/10 p-5">
           <ImagePlus aria-hidden className="h-6 w-6 text-lime" />
-          <h2 className="mt-4 font-semibold text-cream">Demo workflow</h2>
+          <h2 className="mt-4 font-semibold text-cream">Публикация</h2>
           <p className="mt-2 text-sm leading-6 text-cream/58">
-            Форма проверяет данные на клиенте, но production-версия должна
-            повторно валидировать их на сервере, проверять права и загружать
-            изображения через безопасный storage.
+            Скоро добавим сохранение объявлений и загрузку фото в профиль продавца.
           </p>
         </div>
 
         <Button type="submit" size="lg" className="w-full" disabled={submitting}>
-          {submitting ? "Проверяем..." : "Опубликовать demo"}
+          {submitting ? "Проверяем..." : "Опубликовать"}
         </Button>
       </aside>
     </form>

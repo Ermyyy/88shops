@@ -38,7 +38,7 @@ export function DealMethodCard({
           <Icon aria-hidden className="h-5 w-5" />
         </span>
         <Badge variant={method === "SAFE_DEAL" ? "warning" : "neutral"}>
-          {method === "SAFE_DEAL" ? "5%" : "0%"}
+          {method === "SAFE_DEAL" ? "Скоро" : "Доступно"}
         </Badge>
       </div>
       <h3 className="text-base font-semibold text-cream">{DEAL_METHOD_LABELS[method]}</h3>

@@ -2,24 +2,43 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, Menu, Search, UserRound, X } from "lucide-react";
+import { Heart, LogOut, Menu, Search, UserRound, X } from "lucide-react";
 import { LinkButton } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { useFavoritesStore } from "@/store/favorites-store";
 import { useUiStore } from "@/store/ui-store";
 import { cn } from "@/lib/utils";
 
-const navItems = [
+export type HeaderUser = {
+  username: string;
+  displayName: string;
+};
+
+type HeaderProps = {
+  user: HeaderUser | null;
+};
+
+const publicNavItems = [
   { href: "/catalog", label: "Каталог" },
   { href: "/shops", label: "Магазины" },
   { href: "/about", label: "О нас" },
 ];
 
-export function Header() {
+const authenticatedNavItems = [
+  { href: "/", label: "Главная" },
+  { href: "/catalog", label: "Каталог" },
+  { href: "/shops", label: "Магазины" },
+  { href: "/deals", label: "Сделки" },
+];
+
+export function Header({ user }: HeaderProps) {
   const pathname = usePathname();
   const favoriteCount = useFavoritesStore((state) => state.favoriteIds.length);
   const mobileMenuOpen = useUiStore((state) => state.mobileMenuOpen);
   const setMobileMenuOpen = useUiStore((state) => state.setMobileMenuOpen);
+  const isAuthenticated = Boolean(user);
+  const profileHref = user ? `/profile/${user.username}` : "/auth";
+  const navItems = isAuthenticated ? authenticatedNavItems : publicNavItems;
 
   return (
     <header className="sticky top-0 z-40 border-b border-white/10 bg-night/78 backdrop-blur-xl">
@@ -62,79 +81,126 @@ export function Header() {
           >
             <Search aria-hidden className="h-5 w-5" />
           </Link>
-          <LinkButton href="/sell" size="sm">
-            Выложить объявление
-          </LinkButton>
-          <Link
-            href="/favorites"
-            className="relative inline-flex h-11 w-11 items-center justify-center rounded-[8px] border border-white/10 text-cream/70 transition hover:border-lime/45 hover:text-lime"
-            aria-label="Избранное"
-          >
-            <Heart aria-hidden className="h-5 w-5" />
-            {favoriteCount > 0 ? (
-              <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-lime px-1 text-[10px] font-bold text-black">
-                {favoriteCount}
-              </span>
-            ) : null}
-          </Link>
-          <Link
-            href="/profile/alina.archive"
-            className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.06] text-cream/70 transition hover:border-lime/45 hover:text-lime"
-            aria-label="Профиль"
-          >
-            <UserRound aria-hidden className="h-5 w-5" />
-          </Link>
+
+          {isAuthenticated ? (
+            <>
+              <LinkButton href="/sell" size="sm">
+                Выложить вещь
+              </LinkButton>
+              <Link
+                href="/favorites"
+                className="relative inline-flex h-11 w-11 items-center justify-center rounded-[8px] border border-white/10 text-cream/70 transition hover:border-lime/45 hover:text-lime"
+                aria-label="Избранное"
+              >
+                <Heart aria-hidden className="h-5 w-5" />
+                {favoriteCount > 0 ? (
+                  <span className="absolute -right-1 -top-1 grid h-5 min-w-5 place-items-center rounded-full bg-lime px-1 text-[10px] font-bold text-black">
+                    {favoriteCount}
+                  </span>
+                ) : null}
+              </Link>
+              <Link
+                href={profileHref}
+                className="inline-flex h-11 items-center justify-center gap-2 rounded-[8px] border border-white/10 bg-white/[0.06] px-3 text-sm font-semibold text-cream/70 transition hover:border-lime/45 hover:text-lime"
+                aria-label="Мой профиль"
+              >
+                <UserRound aria-hidden className="h-5 w-5" />
+                <span className="max-w-32 truncate">{user?.displayName}</span>
+              </Link>
+              <form action="/logout" method="post">
+                <button
+                  type="submit"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-[8px] border border-white/10 text-cream/70 transition hover:border-lime/45 hover:text-lime"
+                  aria-label="Выйти"
+                >
+                  <LogOut aria-hidden className="h-5 w-5" />
+                </button>
+              </form>
+            </>
+          ) : (
+            <>
+              <LinkButton href="/auth" variant="secondary" size="sm">
+                Войти
+              </LinkButton>
+              <LinkButton href="/auth" size="sm">
+                Создать аккаунт
+              </LinkButton>
+            </>
+          )}
         </div>
 
         <button
           type="button"
           className="inline-flex h-11 w-11 items-center justify-center rounded-[8px] border border-white/10 text-cream lg:hidden"
-          onClick={() => setMobileMenuOpen(true)}
-          aria-label="Открыть меню"
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          aria-label={mobileMenuOpen ? "Закрыть меню" : "Открыть меню"}
+          aria-expanded={mobileMenuOpen}
+          aria-controls="mobile-navigation"
         >
-          <Menu aria-hidden className="h-5 w-5" />
+          {mobileMenuOpen ? (
+            <X aria-hidden className="h-5 w-5" />
+          ) : (
+            <Menu aria-hidden className="h-5 w-5" />
+          )}
         </button>
       </div>
 
       <Drawer
         open={mobileMenuOpen}
-        title="Навигация"
+        title="88Shops"
         onClose={() => setMobileMenuOpen(false)}
       >
-        <div className="flex flex-col gap-2">
-          {[...navItems, { href: "/premium", label: "Premium" }].map((item) => (
+        <div id="mobile-navigation" className="flex min-h-full flex-col gap-2">
+          {(isAuthenticated
+            ? [
+                { href: "/", label: "Главная" },
+                { href: "/catalog", label: "Каталог" },
+                { href: "/shops", label: "Магазины" },
+                { href: "/sell", label: "Выложить вещь" },
+                { href: "/favorites", label: "Избранное" },
+                { href: "/deals", label: "Сделки" },
+                { href: profileHref, label: "Мой профиль" },
+              ]
+            : [
+                { href: "/catalog", label: "Каталог" },
+                { href: "/shops", label: "Магазины" },
+                { href: "/about", label: "О нас" },
+                { href: "/auth", label: "Войти" },
+                { href: "/auth", label: "Создать аккаунт" },
+              ]
+          ).map((item) => (
             <Link
-              key={item.href}
+              key={`${item.href}-${item.label}`}
               href={item.href}
               onClick={() => setMobileMenuOpen(false)}
-              className="rounded-[8px] border border-white/10 px-4 py-3 text-sm font-semibold text-cream/75"
+              className={cn(
+                "flex min-h-12 items-center rounded-[8px] border border-white/10 bg-white/[0.04] px-4 text-sm font-semibold text-cream/78 transition hover:border-lime/45 hover:text-lime",
+                pathname === item.href && "border-lime/35 text-lime",
+              )}
             >
               {item.label}
             </Link>
           ))}
-          <LinkButton
-            href="/sell"
-            className="mt-3 w-full"
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Выложить объявление
-          </LinkButton>
-          <Link
-            href="/favorites"
-            onClick={() => setMobileMenuOpen(false)}
-            className="mt-2 inline-flex min-h-11 items-center justify-center gap-2 rounded-[8px] border border-white/10 text-sm font-semibold text-cream"
-          >
-            <Heart aria-hidden className="h-4 w-4" />
-            Избранное
-          </Link>
-          <button
-            type="button"
-            onClick={() => setMobileMenuOpen(false)}
-            className="mt-6 inline-flex min-h-11 items-center justify-center gap-2 rounded-[8px] text-sm font-semibold text-cream/55"
-          >
-            <X aria-hidden className="h-4 w-4" />
-            Закрыть
-          </button>
+
+          {isAuthenticated ? (
+            <form action="/logout" method="post" className="mt-2">
+              <button
+                type="submit"
+                onClick={() => setMobileMenuOpen(false)}
+                className="flex min-h-12 w-full items-center justify-center gap-2 rounded-[8px] border border-white/10 bg-white/[0.04] px-4 text-sm font-semibold text-cream/78 transition hover:border-lime/45 hover:text-lime"
+              >
+                <LogOut aria-hidden className="h-4 w-4" />
+                Выйти
+              </button>
+            </form>
+          ) : null}
+
+          <div className="mt-auto rounded-[8px] border border-white/10 bg-black/24 p-4">
+            <p className="text-sm font-semibold text-cream">88Shops</p>
+            <p className="mt-2 text-sm leading-6 text-cream/58">
+              Одежда, кроссовки и магазины в одном месте.
+            </p>
+          </div>
         </div>
       </Drawer>
     </header>

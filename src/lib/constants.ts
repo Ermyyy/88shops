@@ -51,16 +51,15 @@ export const CONDITION_LABELS: Record<ProductCondition, string> = {
 };
 
 export const DEAL_METHOD_LABELS: Record<DealMethod, string> = {
-  PERSONAL_MEETING: "Личная встреча",
-  DIRECT: "Прямая сделка",
+  PERSONAL_MEETING: "Встретиться лично",
+  DIRECT: "Договориться напрямую",
   SAFE_DEAL: "Безопасная сделка",
 };
 
 export const DEAL_METHOD_DESCRIPTIONS: Record<DealMethod, string> = {
-  PERSONAL_MEETING: "Осмотр и передача вещи лично, комиссия 0%.",
-  DIRECT: "Вы договариваетесь напрямую с продавцом, комиссия 0%.",
-  SAFE_DEAL:
-    "Будущая защищенная опция 88Shops с комиссией 5%. Реальные платежи пока не подключены.",
+  PERSONAL_MEETING: "Проверь вещь и рассчитайся при встрече.",
+  DIRECT: "Условия оплаты и доставки обсуждаете сами.",
+  SAFE_DEAL: "Готовим защищённый сценарий оплаты и доставки.",
 };
 
 export const AUTHENTICITY_LABELS = {

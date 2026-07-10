@@ -9,9 +9,15 @@ type FavoriteButtonProps = {
   productId: string;
   label?: string;
   className?: string;
+  isAuthenticated?: boolean;
 };
 
-export function FavoriteButton({ productId, label, className }: FavoriteButtonProps) {
+export function FavoriteButton({
+  productId,
+  label,
+  className,
+  isAuthenticated = true,
+}: FavoriteButtonProps) {
   const isFavorite = useFavoritesStore((state) => state.isFavorite(productId));
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite);
   const active = isFavorite;
@@ -22,6 +28,13 @@ export function FavoriteButton({ productId, label, className }: FavoriteButtonPr
       onClick={(event) => {
         event.preventDefault();
         event.stopPropagation();
+
+        if (!isAuthenticated) {
+          const callbackUrl = `${window.location.pathname}${window.location.search}`;
+          window.location.href = `/auth?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+          return;
+        }
+
         toggleFavorite(productId);
         toast(active ? "Удалено из избранного" : "Добавлено в избранное");
       }}

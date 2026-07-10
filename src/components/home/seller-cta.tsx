@@ -11,11 +11,10 @@ export function SellerCta() {
             Для продавцов
           </p>
           <h2 className="mt-5 font-serif text-5xl leading-none md:text-6xl">
-            Собери магазин вокруг своего вкуса.
+            Есть вещи, которые пора продать?
           </h2>
           <p className="mt-5 max-w-2xl text-sm leading-6 text-black/70 md:text-base">
-            В MVP объявление не сохраняется в базу: форма показывает будущий
-            workflow, валидацию и безопасную подготовку загрузки.
+            Добавь хорошие фото, честно опиши состояние и покажи вещь тем, кто ищет именно такой стиль.
           </p>
         </div>
         <LinkButton

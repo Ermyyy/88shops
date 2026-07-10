@@ -16,6 +16,7 @@ import {
   CONDITION_LABELS,
   DEAL_METHOD_LABELS,
 } from "@/lib/constants";
+import { hasSessionCookie } from "@/lib/auth";
 import {
   getProductById,
   getRelatedProducts,
@@ -69,6 +70,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const shop = getShopById(product.shopId);
   const reviews = shop ? getReviewsForShop(shop.id) : getReviewsForUser(product.sellerId);
   const related = getRelatedProducts(product);
+  const isAuthenticated = await hasSessionCookie();
 
   return (
     <div className="page-shell py-10">
@@ -118,25 +120,30 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
             <p className="mt-5 text-sm leading-6 text-cream/62">{product.description}</p>
 
-            <Link
-              href={seller.href}
-              className="mt-6 flex items-center gap-4 rounded-[8px] border border-white/10 bg-black/24 p-4 transition hover:border-lime/40"
-            >
-              <Avatar src={seller.avatarUrl} name={seller.name} frame={seller.verified ? "lime" : "none"} />
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="truncate font-semibold text-cream">{seller.name}</p>
-                  {seller.verified ? <Badge variant="lime">Verified</Badge> : null}
+            <div className="mt-6 rounded-[8px] border border-white/10 bg-black/24 p-4">
+              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-cream/42">
+                О продавце
+              </p>
+              <Link
+                href={seller.href}
+                className="flex items-center gap-4 transition hover:text-lime"
+              >
+                <Avatar src={seller.avatarUrl} name={seller.name} frame={seller.verified ? "lime" : "none"} />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="truncate font-semibold text-cream">{seller.name}</p>
+                    {seller.verified ? <Badge variant="lime">Verified</Badge> : null}
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-cream/52">
+                    <Rating value={seller.rating} />
+                    <span>{seller.salesCount} продаж</span>
+                  </div>
                 </div>
-                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-cream/52">
-                  <Rating value={seller.rating} />
-                  <span>{seller.salesCount} продаж</span>
-                </div>
-              </div>
-            </Link>
+              </Link>
+            </div>
 
             <div className="mt-6">
-              <ProductActions productId={product.id} />
+              <ProductActions productId={product.id} isAuthenticated={isAuthenticated} />
             </div>
           </div>
         </aside>
@@ -146,7 +153,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <div className="rounded-[8px] border border-white/10 bg-white/[0.04] p-6">
           <div className="mb-5 flex items-center gap-3">
             <PackageCheck aria-hidden className="h-5 w-5 text-lime" />
-            <h2 className="text-2xl font-semibold text-cream">Способ сделки</h2>
+            <h2 className="text-2xl font-semibold text-cream">Как купить</h2>
           </div>
           <div className="grid gap-3 md:grid-cols-3">
             {product.dealMethods.map((method) => (
@@ -164,10 +171,9 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <div className="flex items-start gap-3">
             <ShieldAlert aria-hidden className="mt-1 h-5 w-5 shrink-0 text-amber-200" />
             <div>
-              <h2 className="font-semibold text-amber-100">Платежи пока не подключены</h2>
+              <h2 className="font-semibold text-amber-100">Безопасная сделка скоро</h2>
               <p className="mt-2 text-sm leading-6 text-amber-50/70">
-                {DEAL_METHOD_LABELS.SAFE_DEAL} показана как будущая опция с комиссией 5%.
-                Реальный checkout, escrow, выплаты и QR-коды в MVP не создаются.
+                {DEAL_METHOD_LABELS.SAFE_DEAL}: готовим защищённый сценарий оплаты и доставки.
               </p>
             </div>
           </div>
@@ -210,7 +216,11 @@ export default async function ProductPage({ params }: ProductPageProps) {
           <SectionHeading title="Похожие товары" eyebrow="Еще в подборке" />
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             {related.map((item) => (
-              <ProductCard key={item.id} product={item} />
+              <ProductCard
+                key={item.id}
+                product={item}
+                isAuthenticated={isAuthenticated}
+              />
             ))}
           </div>
         </section>

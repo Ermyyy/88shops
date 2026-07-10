@@ -5,6 +5,8 @@ import { Heart, Package, ShoppingBag, Star, Ticket } from "lucide-react";
 import { ProfileCustomization } from "@/features/profile/profile-customization";
 import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { LinkButton } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ProductCard } from "@/components/ui/product-card";
 import { Rating } from "@/components/ui/rating";
 import { SafeImage } from "@/components/ui/safe-image";
@@ -105,11 +107,19 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               id: "listings",
               label: "Объявления",
               content: (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  {listings.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
+                listings.length > 0 ? (
+                  <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    {listings.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    title="Здесь пока пусто"
+                    description="Первое объявление — лучший способ начать."
+                    action={<LinkButton href="/sell">Выложить вещь</LinkButton>}
+                  />
+                )
               ),
             },
             {

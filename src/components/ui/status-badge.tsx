@@ -2,9 +2,9 @@ import type { DealStatus } from "@/types";
 import { Badge } from "@/components/ui/badge";
 
 const labels: Record<DealStatus, string> = {
-  PENDING: "Ожидает",
-  AWAITING_PAYMENT: "Ожидает оплаты",
-  PAID: "Оплачено",
+  PENDING: "В работе",
+  AWAITING_PAYMENT: "Скоро",
+  PAID: "Скоро",
   SHIPPED: "Отправлено",
   DELIVERED: "Доставлено",
   CONFIRMED: "Подтверждено",

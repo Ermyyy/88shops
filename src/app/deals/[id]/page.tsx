@@ -18,6 +18,18 @@ type DealPageProps = {
   params: Promise<{ id: string }>;
 };
 
+const statusLabels: Record<DealStatus, string> = {
+  PENDING: "Договориться",
+  AWAITING_PAYMENT: "Подготовка",
+  PAID: "Подтверждение",
+  SHIPPED: "Доставка",
+  DELIVERED: "Получение",
+  CONFIRMED: "Проверка",
+  DISPUTED: "Спор",
+  CANCELLED: "Отмена",
+  COMPLETED: "Готово",
+};
+
 export function generateStaticParams() {
   return deals.map((deal) => ({ id: deal.id }));
 }
@@ -28,7 +40,7 @@ export async function generateMetadata({ params }: DealPageProps): Promise<Metad
 
   return {
     title: deal ? `Сделка ${deal.id}` : "Сделка не найдена",
-    description: "Демо-интерфейс сделки 88Shops без реальных платежей.",
+    description: "Страница сделки 88Shops.",
   };
 }
 
@@ -61,28 +73,25 @@ export default async function DealPage({ params }: DealPageProps) {
             <div className="mb-5 flex flex-wrap items-center gap-2">
               <StatusBadge status={deal.status} />
               <Badge>{DEAL_METHOD_LABELS[deal.method]}</Badge>
+              {deal.method === "SAFE_DEAL" ? <Badge variant="warning">Скоро</Badge> : null}
             </div>
             <h1 className="font-serif text-5xl text-cream md:text-7xl">
               Сделка {deal.id}
             </h1>
             <p className="mt-4 text-sm leading-6 text-cream/58">
-              Создана {formatDate(deal.createdAt)}. Реальные статусы должны
-              меняться только сервером после проверенного webhook и проверки прав.
+              Создана {formatDate(deal.createdAt)}. Готовим защищённый сценарий оплаты и доставки.
             </p>
           </div>
 
           <div className="rounded-[8px] border border-amber-300/25 bg-amber-300/10 p-5 text-sm leading-6 text-amber-50/75">
             <div className="flex items-start gap-3">
               <ShieldAlert aria-hidden className="mt-1 h-5 w-5 shrink-0 text-amber-200" />
-              <p>
-                Это демонстрационный интерфейс. Сервис не принимает, не хранит,
-                не резервирует и не переводит деньги.
-              </p>
+              <p>Оплата через безопасную сделку появится после подключения сервиса.</p>
             </div>
           </div>
 
           <div className="rounded-[8px] border border-white/10 bg-white/[0.045] p-6">
-            <h2 className="mb-5 text-2xl font-semibold text-cream">Timeline</h2>
+            <h2 className="mb-5 text-2xl font-semibold text-cream">Статус</h2>
             <div className="grid gap-3">
               {DEAL_STATUSES.map((status, index) => (
                 <TimelineRow
@@ -113,28 +122,26 @@ export default async function DealPage({ params }: DealPageProps) {
               />
             </div>
             <h2 className="text-xl font-semibold text-cream">
-              {product?.title ?? "Товар удален"}
+              {product?.title ?? "Товар удалён"}
             </h2>
             <dl className="mt-5 space-y-3 text-sm">
-              <Row label="Сумма" value={<Price value={deal.amountKopecks} />} />
-              <Row label="Комиссия" value={`${deal.commissionPercent}%`} />
-              <Row label="Комиссия в рублях" value={<Price value={deal.commissionAmountKopecks} />} />
-              <Row label="Метод" value={DEAL_METHOD_LABELS[deal.method]} />
+              <Row label="Цена" value={<Price value={deal.amountKopecks} />} />
+              <Row label="Способ" value={DEAL_METHOD_LABELS[deal.method]} />
+              <Row label="Статус" value={<StatusBadge status={deal.status} />} />
             </dl>
           </div>
 
           <div className="rounded-[8px] border border-white/10 bg-white/[0.045] p-5">
-            <h2 className="font-semibold text-cream">Действия safe deal</h2>
+            <h2 className="font-semibold text-cream">Действия</h2>
             <p className="mt-2 text-sm leading-6 text-cream/55">
-              Кнопки выключены: клиент не подтверждает оплату, не создает QR,
-              не подключает СБП и не меняет финансовый статус.
+              Безопасная сделка скоро появится. Пока кнопки оплаты выключены.
             </p>
             <div className="mt-4 grid gap-3">
               <Button type="button" disabled>
-                Оплатить disabled
+                Оплата скоро
               </Button>
               <Button type="button" variant="secondary" disabled>
-                Подтвердить получение disabled
+                Подтверждение скоро
               </Button>
             </div>
           </div>
@@ -159,7 +166,7 @@ function TimelineRow({
         className={`h-3 w-3 rounded-full ${active ? "bg-lime" : "bg-white/18"}`}
         aria-hidden
       />
-      <span className="flex-1 text-sm font-semibold text-cream/70">{status}</span>
+      <span className="flex-1 text-sm font-semibold text-cream/70">{statusLabels[status]}</span>
       {current ? <StatusBadge status={status} /> : null}
     </div>
   );

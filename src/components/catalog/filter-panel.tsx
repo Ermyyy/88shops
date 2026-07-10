@@ -58,7 +58,7 @@ export function FilterPanel({ filters, onChange, onReset }: FilterPanelProps) {
         <Input
           value={filters.query}
           onChange={(event) => update("query", event.target.value)}
-          placeholder="Бренд, модель, город..."
+          placeholder="Что ищешь?"
         />
       </label>
 

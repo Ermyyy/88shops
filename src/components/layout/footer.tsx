@@ -23,8 +23,8 @@ const columns = [
     title: "88Shops",
     links: [
       { href: "/about", label: "О нас" },
-      { href: "/profile/alina.archive", label: "Demo профиль" },
-      { href: "/shops/asphalt-archive", label: "Demo магазин" },
+      { href: "/profile/alina.archive", label: "Профиль продавца" },
+      { href: "/shops/asphalt-archive", label: "Магазин Asphalt Archive" },
     ],
   },
 ];
@@ -45,7 +45,7 @@ export function Footer() {
             свой магазин без шума.
           </p>
           <p className="mt-8 text-xs uppercase tracking-[0.2em] text-cream/36">
-            Demo MVP · реальные платежи не подключены
+            Одежда, кроссовки и магазины в одном месте
           </p>
         </div>
         <div className="grid gap-8 sm:grid-cols-3">

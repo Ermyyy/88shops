@@ -4,7 +4,7 @@ import { products } from "@/lib/mock-data";
 
 export const metadata: Metadata = {
   title: "Избранное",
-  description: "Локальное избранное 88Shops на Zustand persist, только ID товаров.",
+  description: "Сохранённые вещи в 88Shops.",
 };
 
 export default function FavoritesPage() {
@@ -18,8 +18,7 @@ export default function FavoritesPage() {
           Сохраненные вещи
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-cream/58">
-          Локальная подборка для MVP. Она не создает аккаунт, не синхронизируется
-          с сервером и не хранит ничего кроме идентификаторов.
+          Всё, к чему хочется вернуться позже.
         </p>
       </div>
       <FavoritesClient products={products} />

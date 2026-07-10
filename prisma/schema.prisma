@@ -53,34 +53,49 @@ enum UserRole {
   ADMIN
 }
 
+enum AuthenticityPreference {
+  ORIGINAL
+  REPLICA
+  BOTH
+}
+
 model User {
-  id             String             @id @default(cuid())
-  email          String?            @unique
-  username       String             @unique
-  firstName      String
-  lastName       String
-  telegramId     String?            @unique
-  avatarUrl      String?
-  coverUrl       String?
-  bio            String?
-  city           String?
-  rating         Float              @default(0)
-  salesCount     Int                @default(0)
-  purchasesCount Int                @default(0)
-  role           UserRole           @default(USER)
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  accounts       Account[]
-  sessions       Session[]
-  shops          Shop[]             @relation("ShopOwner")
-  products       Product[]          @relation("ProductSeller")
-  favorites      Favorite[]
-  reviewsWritten Review[]           @relation("ReviewAuthor")
-  reviewsTarget  Review[]           @relation("ReviewTargetUser")
-  dealsAsBuyer   Deal[]             @relation("DealBuyer")
-  dealsAsSeller  Deal[]             @relation("DealSeller")
-  badges         UserBadge[]
-  customization  UserCustomization?
+  id                    String                 @id @default(cuid())
+  email                 String?                @unique
+  username              String                 @unique
+  firstName             String
+  lastName              String
+  passwordHash          String?
+  telegramId            String?                @unique
+  avatarUrl             String?
+  coverUrl              String?
+  bio                   String?
+  city                  String?
+  onboardingCompleted   Boolean                @default(false)
+  skippedOnboarding     Boolean                @default(false)
+  preferredAuthenticity AuthenticityPreference @default(BOTH)
+  clothingSize          String?
+  shoeSize              String?
+  favoriteBrands        String[]               @default([])
+  interestTags          String[]               @default([])
+  dealPreferences       DealMethod[]           @default([])
+  rating                Float                  @default(0)
+  salesCount            Int                    @default(0)
+  purchasesCount        Int                    @default(0)
+  role                  UserRole               @default(USER)
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  accounts              Account[]
+  sessions              Session[]
+  shops                 Shop[]                 @relation("ShopOwner")
+  products              Product[]              @relation("ProductSeller")
+  favorites             Favorite[]
+  reviewsWritten        Review[]               @relation("ReviewAuthor")
+  reviewsTarget         Review[]               @relation("ReviewTargetUser")
+  dealsAsBuyer          Deal[]                 @relation("DealBuyer")
+  dealsAsSeller         Deal[]                 @relation("DealSeller")
+  badges                UserBadge[]
+  customization         UserCustomization?
 }
 
 model Account {
@@ -238,7 +253,7 @@ model UserCustomization {
   avatarFrame         String   @default("none")
   animatedFrameFuture Boolean  @default(false)
   animatedCoverFuture Boolean  @default(false)
-  cosmeticPointsDemo  Int      @default(0)
+  cosmeticPoints      Int      @default(0)
   updatedAt           DateTime @updatedAt
   user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

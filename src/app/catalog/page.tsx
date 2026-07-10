@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { CatalogClient } from "@/features/catalog/catalog-client";
+import { hasSessionCookie } from "@/lib/auth";
 import { products } from "@/lib/mock-data";
 import type { CatalogFilters } from "@/types";
 
 export const metadata: Metadata = {
   title: "Каталог",
-  description: "Каталог fashion resale товаров 88Shops с рабочими demo-фильтрами.",
+  description: "Каталог fashion resale товаров 88Shops.",
 };
 
 type CatalogPageProps = {
@@ -14,6 +15,7 @@ type CatalogPageProps = {
 
 export default async function CatalogPage({ searchParams }: CatalogPageProps) {
   const params = await searchParams;
+  const isAuthenticated = await hasSessionCookie();
   const initialFilters: Partial<CatalogFilters> = {
     query: getParam(params.q),
     brand: getParam(params.brand),
@@ -22,7 +24,13 @@ export default async function CatalogPage({ searchParams }: CatalogPageProps) {
     authenticityType: getParam(params.authenticityType),
   };
 
-  return <CatalogClient products={products} initialFilters={initialFilters} />;
+  return (
+    <CatalogClient
+      products={products}
+      initialFilters={initialFilters}
+      isAuthenticated={isAuthenticated}
+    />
+  );
 }
 
 function getParam(value: string | string[] | undefined) {

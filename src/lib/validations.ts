@@ -48,18 +48,27 @@ export const authFormSchema = z.object({
     .string()
     .min(3, "Минимум 3 символа")
     .regex(/^[a-zA-Z0-9_]+$/, "Только латиница, цифры и _"),
-  email: z.string().email("Введите корректный email"),
-  password: z.string().min(8, "Минимум 8 символов"),
+  email: z.string().email("Проверь email"),
+  password: z.string().min(8, "Пароль должен содержать минимум 8 символов"),
+  confirmPassword: z.string().min(8, "Повторите пароль"),
   intent: z.enum(["BUY", "SELL", "BOTH"]),
-  accepted: z.boolean().refine(Boolean, "Нужно согласиться с правилами демо-MVP"),
+  accepted: z.boolean().refine(Boolean, "Нужно принять правила сервиса"),
+}).refine((value) => value.password === value.confirmPassword, {
+  message: "Пароли не совпадают",
+  path: ["confirmPassword"],
+});
+
+export const loginFormSchema = z.object({
+  identifier: z.string().min(1, "Введите email или ник"),
+  password: z.string().min(1, "Введите пароль"),
 });
 
 export const onboardingProfileSchema = z.object({
   avatar: z.string().optional(),
   cover: z.string().optional(),
   city: z.enum(CITIES),
-  bio: z.string().min(12, "Расскажите о себе чуть подробнее"),
-  categories: z.array(z.enum(CATEGORIES)).min(1, "Выберите категории"),
+  bio: z.string().max(220, "Коротко, до 220 символов").optional(),
+  categories: z.array(z.enum(["одежда", "кроссовки", "аксессуары"])).min(1, "Выберите интересы"),
   authenticityPreference: z.enum(["ORIGINAL", "REPLICA", "BOTH"]),
 });
 
@@ -80,6 +89,7 @@ export const legitCheckSchema = z.object({
 
 export type SellFormValues = z.infer<typeof sellFormSchema>;
 export type AuthFormValues = z.infer<typeof authFormSchema>;
+export type LoginFormValues = z.infer<typeof loginFormSchema>;
 export type OnboardingProfileValues = z.infer<typeof onboardingProfileSchema>;
 export type OnboardingInterestsValues = z.infer<typeof onboardingInterestsSchema>;
 export type LegitCheckValues = z.infer<typeof legitCheckSchema>;

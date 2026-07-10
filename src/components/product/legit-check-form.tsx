@@ -20,9 +20,7 @@ export function LegitCheckForm() {
     register,
     setValue,
     control,
-    handleSubmit,
     formState: { errors },
-    reset,
   } = useForm<LegitCheckValues>({
     resolver: zodResolver(legitCheckSchema),
     defaultValues: {
@@ -61,15 +59,12 @@ export function LegitCheckForm() {
         shouldValidate: true,
         shouldDirty: true,
       }),
-    onDropRejected: () => toast("Фото не прошло проверку MIME/размера."),
+    onDropRejected: () => toast("Фото не подходит: нужен JPEG, PNG или WebP до 6 МБ."),
   });
 
   return (
     <form
-      onSubmit={handleSubmit(() => {
-        toast("Demo: заявка не создана. Legit Check появится позже.");
-        reset();
-      })}
+      onSubmit={(event) => event.preventDefault()}
       className="grid gap-6 lg:grid-cols-[1fr_22rem]"
     >
       <section className="rounded-[8px] border border-white/10 bg-white/[0.045] p-5">
@@ -84,7 +79,7 @@ export function LegitCheckForm() {
             {isDragActive ? "Отпустите изображения" : "Добавьте фото вещи и деталей"}
           </p>
           <p className="mt-2 max-w-md text-sm leading-6 text-cream/50">
-            Бирки, швы, фурнитура, подошва, коробка. В MVP изображения остаются локально.
+            Бирки, швы, фурнитура, подошва, коробка. Первые фото помогут быстрее разобраться в вещи.
           </p>
         </div>
         {errors.images ? (
@@ -122,10 +117,9 @@ export function LegitCheckForm() {
       <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
         <div className="rounded-[8px] border border-white/10 bg-white/[0.045] p-5">
           <ShieldQuestion aria-hidden className="h-7 w-7 text-lime" />
-          <h2 className="mt-4 text-2xl font-semibold text-cream">Coming later</h2>
+          <h2 className="mt-4 text-2xl font-semibold text-cream">Готовим запуск</h2>
           <p className="mt-3 text-sm leading-6 text-cream/58">
-            Это UI-заглушка. 88Shops не использует AI для проверки в MVP и не
-            обещает точность результата.
+            Проверка вещи появится позже. Пока можно подготовить фото, бренд, модель и комментарий.
           </p>
         </div>
         <Field label="Бренд" error={errors.brand?.message}>
@@ -148,8 +142,8 @@ export function LegitCheckForm() {
             placeholder="Что смущает, какие документы есть, где покупали..."
           />
         </Field>
-        <Button type="submit" size="lg" className="w-full">
-          Показать demo status
+        <Button type="button" size="lg" className="w-full" disabled>
+          Отправка скоро
         </Button>
       </aside>
     </form>

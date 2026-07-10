@@ -4,12 +4,26 @@ import { Bell, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
-export function ShopActions() {
+type ShopActionsProps = {
+  isAuthenticated?: boolean;
+};
+
+export function ShopActions({ isAuthenticated = false }: ShopActionsProps) {
+  const handleAction = (message: string) => {
+    if (!isAuthenticated) {
+      const callbackUrl = `${window.location.pathname}${window.location.search}`;
+      window.location.href = `/auth?callbackUrl=${encodeURIComponent(callbackUrl)}`;
+      return;
+    }
+
+    toast(message);
+  };
+
   return (
     <div className="flex flex-col gap-3 sm:flex-row">
       <Button
         type="button"
-        onClick={() => toast("Demo: подписка пока не создает реальную связь в базе.")}
+        onClick={() => handleAction("Подписки скоро появятся.")}
       >
         <Bell aria-hidden className="h-4 w-4" />
         Подписаться
@@ -17,7 +31,7 @@ export function ShopActions() {
       <Button
         type="button"
         variant="secondary"
-        onClick={() => toast("Сообщения пока заглушка. Нужны auth, сервер и rate limiting.")}
+        onClick={() => handleAction("Чат скоро появится.")}
       >
         <MessageCircle aria-hidden className="h-4 w-4" />
         Сообщение

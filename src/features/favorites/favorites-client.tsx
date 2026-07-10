@@ -19,7 +19,7 @@ export function FavoritesClient({ products }: { products: Product[] }) {
     return (
       <EmptyState
         title="Избранное пусто"
-        description="Добавляйте товары через сердечко в каталоге. В localStorage сохраняются только ID товаров."
+        description="Сохраняй вещи через сердечко в каталоге."
         action={<LinkButton href="/catalog">Открыть каталог</LinkButton>}
       />
     );

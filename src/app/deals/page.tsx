@@ -10,30 +10,25 @@ import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Сделки",
-  description: "Демо-интерфейс сделок 88Shops без реальных платежей и escrow.",
+  description: "Раздел сделок 88Shops.",
 };
 
 export default function DealsPage() {
   return (
     <div className="page-shell py-10">
       <div className="mb-8">
-        <Badge variant="warning">Demo only</Badge>
-        <h1 className="mt-5 font-serif text-5xl text-cream md:text-7xl">
-          Сделки без финансовой логики
-        </h1>
+        <Badge variant="warning">Скоро</Badge>
+        <h1 className="mt-5 font-serif text-5xl text-cream md:text-7xl">Сделки</h1>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-cream/58">
-          Здесь показан будущий интерфейс safe deal. Клиент не управляет
-          финансовыми статусами, платежи не подключены.
+          Готовим защищённый сценарий оплаты и доставки. Пока можно использовать
+          личную встречу или договориться напрямую.
         </p>
       </div>
 
       <div className="mb-6 rounded-[8px] border border-amber-300/25 bg-amber-300/10 p-5 text-sm leading-6 text-amber-50/75">
         <div className="flex items-start gap-3">
           <ShieldAlert aria-hidden className="mt-1 h-5 w-5 shrink-0 text-amber-200" />
-          <p>
-            Это демонстрационный интерфейс. Сервис не принимает, не хранит, не
-            резервирует и не переводит деньги.
-          </p>
+          <p>Безопасная сделка появится после подключения оплаты и доставки.</p>
         </div>
       </div>
 
@@ -55,7 +50,7 @@ export default function DealsPage() {
                   <Badge>{DEAL_METHOD_LABELS[deal.method]}</Badge>
                 </div>
                 <h2 className="text-xl font-semibold text-cream">
-                  {product?.title ?? "Товар удален"}
+                  {product?.title ?? "Товар удалён"}
                 </h2>
                 <p className="mt-2 text-sm text-cream/52">
                   Покупатель: {buyer?.displayName ?? "Покупатель"} · Продавец:{" "}

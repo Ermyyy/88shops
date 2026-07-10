@@ -9,7 +9,12 @@ import { getSellerForProduct } from "@/lib/mock-data";
 import { getProductSize } from "@/lib/utils";
 import type { Product } from "@/types";
 
-export function ProductCard({ product }: { product: Product }) {
+type ProductCardProps = {
+  product: Product;
+  isAuthenticated?: boolean;
+};
+
+export function ProductCard({ product, isAuthenticated = true }: ProductCardProps) {
   const seller = getSellerForProduct(product);
 
   return (
@@ -31,6 +36,7 @@ export function ProductCard({ product }: { product: Product }) {
           </div>
           <FavoriteButton
             productId={product.id}
+            isAuthenticated={isAuthenticated}
             className="absolute right-3 top-3 h-11 w-11 px-0"
           />
         </div>

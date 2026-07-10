@@ -16,12 +16,14 @@ type CatalogClientProps = {
   products: Product[];
   initialFilters?: Partial<CatalogFilters>;
   initialSort?: CatalogSort;
+  isAuthenticated?: boolean;
 };
 
 export function CatalogClient({
   products,
   initialFilters,
   initialSort = "new",
+  isAuthenticated = false,
 }: CatalogClientProps) {
   const [filters, setFilters] = useState<CatalogFilters>({
     ...emptyFilters,
@@ -88,15 +90,12 @@ export function CatalogClient({
           <p className="text-xs font-semibold uppercase tracking-[0.22em] text-lime">
             Каталог
           </p>
-          <h1 className="mt-3 font-serif text-5xl text-cream md:text-7xl">
-            Вещи без шума
-          </h1>
+          <h1 className="mt-3 font-serif text-5xl text-cream md:text-7xl">Каталог</h1>
           <p className="mt-4 max-w-2xl text-sm leading-6 text-cream/58">
-            Фильтры работают на моковых данных. URL-параметры используются как
-            стартовые значения, чтобы не усложнять MVP.
+            Новые вещи появляются каждый день.
           </p>
         </div>
-        <LinkButton href="/sell">Выложить объявление</LinkButton>
+        <LinkButton href="/sell">Выложить вещь</LinkButton>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
@@ -138,13 +137,17 @@ export function CatalogClient({
           {filteredProducts.length > 0 ? (
             <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {filteredProducts.map((product) => (
-                <ProductCard key={product.id} product={product} />
+                <ProductCard
+                  key={product.id}
+                  product={product}
+                  isAuthenticated={isAuthenticated}
+                />
               ))}
             </div>
           ) : (
             <EmptyState
-              title="Ничего не найдено"
-              description="Попробуйте сбросить фильтры или изменить поисковый запрос."
+              title="Пока ничего не нашли"
+              description="Попробуй изменить фильтры или поискать по-другому."
               action={
                 <Button type="button" variant="secondary" onClick={reset}>
                   Сбросить фильтры

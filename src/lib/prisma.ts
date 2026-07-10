@@ -1,19 +1,29 @@
+import { PrismaPg } from "@prisma/adapter-pg";
 import { PrismaClient } from "@/generated/prisma/client";
-
-type PrismaClientConstructorOptions = ConstructorParameters<typeof PrismaClient>[0];
 
 const globalForPrisma = globalThis as unknown as {
   prisma?: PrismaClient;
 };
 
-export function createPrismaClient(options: PrismaClientConstructorOptions) {
-  const client = globalForPrisma.prisma ?? new PrismaClient(options);
+function createPrismaClient() {
+  const connectionString = process.env.DATABASE_URL;
+
+  if (!connectionString) {
+    throw new Error("DATABASE_URL is required for Prisma runtime access.");
+  }
+
+  const adapter = new PrismaPg({ connectionString });
+  const client = globalForPrisma.prisma ?? new PrismaClient({ adapter });
 
   if (process.env.NODE_ENV !== "production") {
     globalForPrisma.prisma = client;
   }
 
   return client;
+}
+
+export function getPrisma() {
+  return globalForPrisma.prisma ?? createPrismaClient();
 }
 
 export type DbClient = ReturnType<typeof createPrismaClient>;

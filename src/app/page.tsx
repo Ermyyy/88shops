@@ -21,16 +21,16 @@ export default function Home() {
         <SectionHeading
           eyebrow="Категории"
           title="Популярные направления"
-          description="Быстрый вход в fashion-каталог без универсальной доски объявлений."
+          description="Быстрый вход в одежду, кроссовки и аксессуары."
         />
         <CategoryStrip />
       </section>
 
       <section className="page-shell py-16">
         <SectionHeading
-          eyebrow="Недавно добавили"
-          title="Свежие объявления"
-          description="Живая витрина моковых товаров с разными брендами, городами и состояниями."
+          eyebrow="Новые вещи"
+          title="Только добавили"
+          description="Свежие находки от частных продавцов и магазинов."
           action={
             <LinkButton href="/catalog" variant="secondary">
               Весь каталог
@@ -47,8 +47,8 @@ export default function Home() {
       <section className="page-shell py-16">
         <SectionHeading
           eyebrow="Магазины"
-          title="Популярные магазины"
-          description="Сортировка основана на mock rating/sales и не является реальным алгоритмом ранжирования."
+          title="Магазины, за которыми следят"
+          description="Продавцы с собственным каталогом и понятной историей."
           action={
             <LinkButton href="/shops" variant="secondary">
               Все магазины
@@ -65,8 +65,8 @@ export default function Home() {
       <section className="page-shell py-16">
         <SectionHeading
           eyebrow="Почему 88Shops"
-          title="Fashion-first вместо шума"
-          description="MVP показывает будущую архитектуру доверия, но не подключает оплату, escrow и настоящие чаты."
+          title="Почему 88Shops"
+          description="Площадка для ресейла, где важны вещь, продавец и понятный способ договориться."
         />
         <BenefitsGrid />
       </section>

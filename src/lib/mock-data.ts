@@ -816,7 +816,7 @@ export const deals: Deal[] = [
     commissionAmountKopecks: 69500,
     method: "SAFE_DEAL",
     status: "DELIVERED",
-    providerPaymentId: "demo-provider-id",
+    providerPaymentId: "provider-pending-id",
     createdAt: "2026-07-01T10:00:00.000Z",
     updatedAt: "2026-07-05T10:00:00.000Z",
   },

@@ -3,12 +3,21 @@ import { Toaster } from "sonner";
 import { Footer } from "@/components/layout/footer";
 import { Header } from "@/components/layout/header";
 import { IntroAnimation } from "@/components/intro/intro-animation";
+import { getCurrentUser } from "@/lib/auth";
 
-export function SiteShell({ children }: { children: ReactNode }) {
+export async function SiteShell({ children }: { children: ReactNode }) {
+  const user = await getCurrentUser();
+  const headerUser = user
+    ? {
+        username: user.username,
+        displayName: `${user.firstName} ${user.lastName}`.trim() || user.username,
+      }
+    : null;
+
   return (
     <>
       <IntroAnimation />
-      <Header />
+      <Header user={headerUser} />
       <main className="min-h-screen flex-1">{children}</main>
       <Footer />
       <Toaster

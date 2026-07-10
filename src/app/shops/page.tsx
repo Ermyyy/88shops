@@ -5,7 +5,7 @@ import { shops } from "@/lib/mock-data";
 export const metadata: Metadata = {
   title: "Магазины",
   description:
-    "Demo-каталог магазинов 88Shops с рейтингом, продажами и mock-сортировками.",
+    "Магазины и продавцы 88Shops с собственным каталогом.",
 };
 
 export default function ShopsPage() {
@@ -16,11 +16,10 @@ export default function ShopsPage() {
           88Shops
         </p>
         <h1 className="mt-3 font-serif text-5xl text-cream md:text-7xl">
-          Магазины с характером
+          88Shops
         </h1>
         <p className="mt-4 max-w-2xl text-sm leading-6 text-cream/58">
-          Рейтинг и продажи здесь являются mock-данными для MVP. Реальное
-          ранжирование магазинов позже должно считаться на сервере.
+          Магазины и продавцы с собственным каталогом.
         </p>
       </div>
       <ShopsDirectory shops={shops} />

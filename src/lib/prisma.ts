@@ -12,7 +12,12 @@ function createPrismaClient() {
     throw new Error("DATABASE_URL is required for Prisma runtime access.");
   }
 
-  const adapter = new PrismaPg({ connectionString });
+  const adapter = new PrismaPg({
+    connectionString,
+    max: 5,
+    idleTimeoutMillis: 30_000,
+    connectionTimeoutMillis: 10_000,
+  });
   const client = new PrismaClient({ adapter });
   globalForPrisma.prisma = client;
   return client;

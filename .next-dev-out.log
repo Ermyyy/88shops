@@ -1,0 +1,23 @@
+
+> shops@0.1.0 dev
+> next dev
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.67:3000
+- Environments: .env
+✓ Ready in 637ms
+Creating turbopack project {
+  dir: 'C:\\Users\\Артем\\Desktop\\production-products\\shops',
+  testMode: true
+}
+
+ GET /catalog 200 in 2.2s (next.js: 312ms, application-code: 1847ms)
+ GET / 200 in 2.0s (next.js: 224ms, application-code: 1795ms)
+ GET /catalog 200 in 1447ms (next.js: 7ms, application-code: 1441ms)
+ GET / 200 in 1539ms (next.js: 8ms, application-code: 1531ms)
+ GET /catalog 200 in 1481ms (next.js: 11ms, application-code: 1470ms)
+ GET / 200 in 1534ms (next.js: 12ms, application-code: 1522ms)
+ GET / 200 in 1370ms (next.js: 7ms, application-code: 1363ms)
+ GET /auth 200 in 64ms (next.js: 35ms, application-code: 29ms)
+ GET / 200 in 1138ms (next.js: 5ms, application-code: 1134ms)

@@ -1,5 +1,7 @@
 import "server-only";
 
+import pg from "pg";
+import type { QueryResultRow } from "pg";
 import { getPrisma } from "@/lib/prisma";
 import type { Deal, Product, Review, Shop, User } from "@/types";
 
@@ -73,64 +75,66 @@ type DbProduct = {
   shop?: DbShop | null;
 };
 
-const productInclude = {
-  seller: {
-    include: {
-      _count: {
-        select: {
-          reviewsTarget: true,
-        },
-      },
-    },
-  },
-  shop: {
-    include: {
-      _count: {
-        select: {
-          products: true,
-          reviews: true,
-        },
-      },
-    },
-  },
-} as const;
+const productColumns = `
+  "id", "sellerId", "shopId", "title", "slug", "brand", "category", "clothingSize",
+  "shoeSize", "priceKopecks", "condition", "authenticityType", "city", "description",
+  "status", "dealMethods", "popularityScore", "createdAt"
+`;
+
+async function queryRows<T extends QueryResultRow>(sql: string, params: unknown[] = []) {
+  const connectionString = process.env.DATABASE_URL;
+
+  if (!connectionString) {
+    throw new Error("DATABASE_URL is required for runtime data access.");
+  }
+
+  const client = new pg.Client({
+    connectionString,
+    ssl: { rejectUnauthorized: false },
+    connectionTimeoutMillis: 5_000,
+    query_timeout: 10_000,
+  });
+
+  client.on("error", () => {});
+
+  try {
+    await client.connect();
+    const result = await client.query<T>(sql, params);
+    return result.rows;
+  } finally {
+    await Promise.race([
+      client.end().catch(() => {}),
+      new Promise<void>((resolve) => {
+        setTimeout(resolve, 250);
+      }),
+    ]);
+  }
+}
+
+async function getActiveProducts(order: "fresh" | "popular", limit?: number) {
+  return queryRows<DbProduct>(
+    `
+      SELECT ${productColumns}
+      FROM "Product"
+      WHERE "status" = 'ACTIVE'
+      ORDER BY ${order === "popular" ? `"popularityScore" DESC, "createdAt" DESC` : `"createdAt" DESC`}
+      ${limit ? "LIMIT $1" : ""}
+    `,
+    limit ? [limit] : [],
+  );
+}
 
 export async function getCatalogProducts() {
-  const products = await getPrisma().product.findMany({
-    where: { status: "ACTIVE" },
-    orderBy: { createdAt: "desc" },
-    include: productInclude,
-  });
+  const products = await getActiveProducts("fresh");
 
   return products.map(mapProduct);
 }
 
 export async function getHomeData() {
   const [fresh, popular, shops] = await Promise.all([
-    getPrisma().product.findMany({
-      where: { status: "ACTIVE" },
-      orderBy: { createdAt: "desc" },
-      take: 15,
-      include: productInclude,
-    }),
-    getPrisma().product.findMany({
-      where: { status: "ACTIVE" },
-      orderBy: [{ popularityScore: "desc" }, { createdAt: "desc" }],
-      take: 10,
-      include: productInclude,
-    }),
-    getPrisma().shop.findMany({
-      orderBy: [{ rating: "desc" }, { salesCount: "desc" }],
-      take: 3,
-      include: {
-        _count: {
-          select: {
-            products: true,
-            reviews: true,
-          },
-        },
-      },
-    }),
+    getActiveProducts("fresh", 15),
+    getActiveProducts("popular", 10),
+    getTopShops(3),
   ]);
 
   return {
@@ -141,96 +145,86 @@ export async function getHomeData() {
 }
 
 export async function getShops() {
-  const shops = await getPrisma().shop.findMany({
-    orderBy: [{ rating: "desc" }, { salesCount: "desc" }],
-    include: {
-      _count: {
-        select: {
-          products: true,
-          reviews: true,
-        },
-      },
-    },
-  });
+  const shops = await getTopShops();
 
   return shops.map(mapShop);
 }
 
 export async function getProductPageData(idOrSlug: string) {
-  const product = await getPrisma().product.findFirst({
-    where: {
-      OR: [{ id: idOrSlug }, { slug: idOrSlug }],
-      status: "ACTIVE",
-    },
-    include: productInclude,
-  });
+  const [product] = await queryRows<DbProduct>(
+    `
+      SELECT ${productColumns}
+      FROM "Product"
+      WHERE "status" = 'ACTIVE' AND ("id" = $1 OR "slug" = $1)
+      LIMIT 1
+    `,
+    [idOrSlug],
+  );
 
   if (!product) {
     return null;
   }
 
+  const [productWithRelations] = await attachProductRelations([product]);
   const [reviews, related] = await Promise.all([
     product.shopId
       ? getPrisma().review.findMany({
           where: { targetShopId: product.shopId },
           orderBy: { createdAt: "desc" },
-          include: { author: true },
         })
       : getPrisma().review.findMany({
           where: { targetUserId: product.sellerId },
           orderBy: { createdAt: "desc" },
-          include: { author: true },
         }),
-    getPrisma().product.findMany({
-      where: {
-        id: { not: product.id },
-        status: "ACTIVE",
-        OR: [{ brand: product.brand }, { category: product.category }],
-      },
-      take: 4,
-      orderBy: [{ popularityScore: "desc" }, { createdAt: "desc" }],
-      include: productInclude,
-    }),
+    queryRows<DbProduct>(
+      `
+        SELECT ${productColumns}
+        FROM "Product"
+        WHERE "id" <> $1 AND "status" = 'ACTIVE' AND ("brand" = $2 OR "category" = $3)
+        ORDER BY "popularityScore" DESC, "createdAt" DESC
+        LIMIT 4
+      `,
+      [product.id, product.brand, product.category],
+    ),
   ]);
 
   return {
-    product: mapProduct(product),
-    seller: makeSeller(product),
+    product: mapProduct(productWithRelations),
+    seller: makeSeller(productWithRelations),
     reviews: reviews.map(mapReview),
-    related: related.map(mapProduct),
+    related: (await attachProductRelations(related)).map(mapProduct),
   };
 }
 
 export async function getShopPageData(slug: string) {
   const shop = await getPrisma().shop.findUnique({
     where: { slug },
-    include: {
-      _count: {
-        select: {
-          products: true,
-          reviews: true,
-        },
-      },
-      products: {
-        where: { status: "ACTIVE" },
-        orderBy: { createdAt: "desc" },
-        include: productInclude,
-      },
-      reviews: {
-        orderBy: { createdAt: "desc" },
-        include: { author: true },
-      },
-    },
   });
 
   if (!shop) {
     return null;
   }
 
+  const [products, reviews] = await Promise.all([
+    queryRows<DbProduct>(
+      `
+        SELECT ${productColumns}
+        FROM "Product"
+        WHERE "shopId" = $1 AND "status" = 'ACTIVE'
+        ORDER BY "createdAt" DESC
+      `,
+      [shop.id],
+    ),
+    getPrisma().review.findMany({
+      where: { targetShopId: shop.id },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+
   return {
     shop: mapShop(shop),
-    products: shop.products.map(mapProduct),
-    reviews: shop.reviews.map(mapReview),
+    products: (await attachProductRelations(products)).map(mapProduct),
+    reviews: reviews.map(mapReview),
   };
 }
 
@@ -239,22 +233,6 @@ export async function getProfilePageData(username: string) {
     where: { username },
     include: {
       customization: true,
-      products: {
-        where: { status: "ACTIVE" },
-        orderBy: { createdAt: "desc" },
-        include: productInclude,
-      },
-      reviewsTarget: {
-        orderBy: { createdAt: "desc" },
-        include: { author: true },
-      },
-      _count: {
-        select: {
-          products: true,
-          favorites: true,
-          reviewsTarget: true,
-        },
-      },
     },
   });
 
@@ -262,54 +240,70 @@ export async function getProfilePageData(username: string) {
     return null;
   }
 
+  const [products, reviews] = await Promise.all([
+    queryRows<DbProduct>(
+      `
+        SELECT ${productColumns}
+        FROM "Product"
+        WHERE "sellerId" = $1 AND "status" = 'ACTIVE'
+        ORDER BY "createdAt" DESC
+      `,
+      [user.id],
+    ),
+    getPrisma().review.findMany({
+      where: { targetUserId: user.id },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+
   return {
     user: mapUser(user),
-    listings: user.products.map(mapProduct),
-    reviews: user.reviewsTarget.map(mapReview),
+    listings: (await attachProductRelations(products)).map(mapProduct),
+    reviews: reviews.map(mapReview),
   };
 }
 
 export async function getDeals() {
   const deals = await getPrisma().deal.findMany({
     orderBy: { createdAt: "desc" },
-    include: {
-      product: true,
-      buyer: true,
-      seller: true,
-    },
   });
+  const products = await getProductsByIds(deals.map((deal) => deal.productId));
+  const users = await getUsersByIds([...deals.map((deal) => deal.buyerId), ...deals.map((deal) => deal.sellerId)]);
 
   return deals.map((deal) => ({
     deal: mapDeal(deal),
-    productTitle: deal.product.title,
-    buyerName: getDisplayName(deal.buyer),
-    sellerName: getDisplayName(deal.seller),
+    productTitle: products.get(deal.productId)?.title ?? "88Shops",
+    buyerName: users.get(deal.buyerId) ? getDisplayName(users.get(deal.buyerId)!) : "88Shops",
+    sellerName: users.get(deal.sellerId) ? getDisplayName(users.get(deal.sellerId)!) : "88Shops",
   }));
 }
 
 export async function getDealPageData(id: string) {
   const deal = await getPrisma().deal.findUnique({
     where: { id },
-    include: {
-      product: true,
-      buyer: true,
-      seller: true,
-    },
   });
 
   if (!deal) {
     return null;
   }
 
+  const products = await getProductsByIds([deal.productId]);
+  const users = await getUsersByIds([deal.buyerId, deal.sellerId]);
+  const product = products.get(deal.productId);
+  const buyer = users.get(deal.buyerId);
+  const seller = users.get(deal.sellerId);
+
   return {
     deal: mapDeal(deal),
-    product: mapProduct({
-      ...deal.product,
-      seller: deal.seller,
-      shop: null,
-    }),
-    buyerName: getDisplayName(deal.buyer),
-    sellerName: getDisplayName(deal.seller),
+    product: product
+      ? mapProduct({
+          ...product,
+          seller,
+          shop: null,
+        })
+      : undefined,
+    buyerName: buyer ? getDisplayName(buyer) : "88Shops",
+    sellerName: seller ? getDisplayName(seller) : "88Shops",
   };
 }
 
@@ -317,14 +311,111 @@ export async function getFavoriteProducts(userId: string) {
   const favorites = await getPrisma().favorite.findMany({
     where: { userId },
     orderBy: { createdAt: "desc" },
-    include: {
-      product: {
-        include: productInclude,
-      },
-    },
   });
+  const products = await getProductsByIds(favorites.map((favorite) => favorite.productId));
+  const hydrated = await attachProductRelations(
+    favorites.flatMap((favorite) => {
+      const product = products.get(favorite.productId);
+      return product ? [product] : [];
+    }),
+  );
 
-  return favorites.map((favorite) => mapProduct(favorite.product));
+  return hydrated.map(mapProduct);
+}
+
+async function attachProductRelations<T extends DbProduct>(products: T[]) {
+  if (products.length === 0) {
+    return products;
+  }
+
+  const [sellers, shops] = await Promise.all([
+    getUsersByIds(products.map((product) => product.sellerId)),
+    getShopsByIds(products.flatMap((product) => (product.shopId ? [product.shopId] : []))),
+  ]);
+
+  return products.map((product) => ({
+    ...product,
+    seller: sellers.get(product.sellerId),
+    shop: product.shopId ? (shops.get(product.shopId) ?? null) : null,
+  }));
+}
+
+async function getUsersByIds(ids: string[]) {
+  const uniqueIds = [...new Set(ids)];
+
+  if (uniqueIds.length === 0) {
+    return new Map<string, DbUser>();
+  }
+
+  const users = await queryRows<DbUser>(
+    `
+      SELECT
+        "id", "email", "username", "firstName", "lastName", "name", "avatarUrl", "coverUrl",
+        "bio", "city", "rating", "salesCount", "purchasesCount", "role", "createdAt"
+      FROM "User"
+      WHERE "id" = ANY($1::text[])
+    `,
+    [uniqueIds],
+  );
+
+  return new Map(users.map((user) => [user.id, user]));
+}
+
+async function getShopsByIds(ids: string[]) {
+  const uniqueIds = [...new Set(ids)];
+
+  if (uniqueIds.length === 0) {
+    return new Map<string, DbShop>();
+  }
+
+  const shops = await queryRows<DbShop>(
+    `
+      SELECT
+        "id", "ownerId", "name", "slug", "avatarUrl", "coverUrl", "description",
+        "rating", "verified", "salesCount", "createdAt"
+      FROM "Shop"
+      WHERE "id" = ANY($1::text[])
+    `,
+    [uniqueIds],
+  );
+
+  return new Map(shops.map((shop) => [shop.id, shop]));
+}
+
+async function getTopShops(limit?: number) {
+  return queryRows<DbShop>(
+    `
+      SELECT
+        "id", "ownerId", "name", "slug", "avatarUrl", "coverUrl", "description",
+        "rating", "verified", "salesCount", "createdAt"
+      FROM "Shop"
+      ORDER BY "rating" DESC, "salesCount" DESC
+      ${limit ? "LIMIT $1" : ""}
+    `,
+    limit ? [limit] : [],
+  );
+}
+
+async function getProductsByIds(ids: string[]) {
+  const uniqueIds = [...new Set(ids)];
+
+  if (uniqueIds.length === 0) {
+    return new Map<string, DbProduct>();
+  }
+
+  const products = await queryRows<DbProduct>(
+    `
+      SELECT
+        "id", "sellerId", "shopId", "title", "slug", "brand", "category", "clothingSize",
+        "shoeSize", "priceKopecks", "condition", "authenticityType", "city", "description",
+        "status", "dealMethods", "popularityScore", "createdAt"
+      FROM "Product"
+      WHERE "id" = ANY($1::text[])
+    `,
+    [uniqueIds],
+  );
+
+  return new Map(products.map((product) => [product.id, product]));
 }
 
 export function mapProduct(product: DbProduct): Product {

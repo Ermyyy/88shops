@@ -26,16 +26,16 @@ export function ShopsDirectory({ shops }: { shops: Shop[] }) {
 
   return (
     <section>
-      <div className="mb-6 flex flex-col gap-3 rounded-[8px] border border-white/10 bg-white/[0.04] p-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-cream/60">
-          Магазинов: <span className="font-semibold text-cream">{sortedShops.length}</span>
+      <div className="mb-4 flex flex-col gap-3 rounded-[8px] border border-black/10 bg-white p-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-sm text-black/60">
+          Магазинов: <span className="font-semibold text-black">{sortedShops.length}</span>
         </p>
-        <label className="flex items-center gap-3 text-sm text-cream/55">
+        <label className="flex items-center gap-3 text-sm text-black/55">
           Сортировка
           <Select
             value={sort}
             onChange={(event) => setSort(event.target.value as ShopSort)}
-            className="min-w-52"
+            className="min-w-48"
           >
             <option value="popular">Популярные</option>
             <option value="new">Новые</option>
@@ -44,7 +44,7 @@ export function ShopsDirectory({ shops }: { shops: Shop[] }) {
           </Select>
         </label>
       </div>
-      <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {sortedShops.map((shop) => (
           <ShopCard key={shop.id} shop={shop} />
         ))}

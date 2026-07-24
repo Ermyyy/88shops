@@ -39,14 +39,14 @@ export function FavoriteButton({
         toast(active ? "Удалено из избранного" : "Добавлено в избранное");
       }}
       className={cn(
-        "inline-flex min-h-11 items-center justify-center gap-2 rounded-[8px] border border-white/10 bg-black/45 px-3 text-sm font-semibold text-cream transition hover:border-lime/45 hover:text-lime",
-        active && "border-lime/45 text-lime",
+        "inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] border border-black/10 bg-white/95 px-3 text-sm font-semibold text-cream shadow-sm transition hover:border-black/20 hover:bg-white",
+        active && "border-lime bg-lime/80 text-black",
         className,
       )}
       aria-pressed={active}
       aria-label={active ? "Удалить из избранного" : "Добавить в избранное"}
     >
-      <Heart aria-hidden className={cn("h-4 w-4", active && "fill-lime")} />
+      <Heart aria-hidden className={cn("h-4 w-4", active && "fill-black")} />
       {label ? <span>{label}</span> : null}
     </button>
   );

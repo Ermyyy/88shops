@@ -18,14 +18,14 @@ export function ProductActions({ productId, isAuthenticated = true }: ProductAct
       return;
     }
 
-    toast("Чат скоро появится.");
+    toast("Сообщения скоро появятся.");
   };
 
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
-      <Button type="button" onClick={handleMessage}>
+    <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
+      <Button type="button" onClick={handleMessage} className="w-full">
         <MessageCircle aria-hidden className="h-4 w-4" />
-        Написать продавцу
+        Написать
       </Button>
       <FavoriteButton
         productId={productId}

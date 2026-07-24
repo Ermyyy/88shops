@@ -1,454 +1,410 @@
 "use client";
 
-import { useActionState, useState, type ReactNode } from "react";
-import { useFormStatus } from "react-dom";
-import { ArrowRight, Eye, EyeOff, LockKeyhole, Send, Sparkles } from "lucide-react";
-import {
-  completeOnboardingAction,
-  loginAction,
-  registerAction,
-  skipOnboardingAction,
-} from "@/lib/auth-actions";
-import type { AuthActionState, OnboardingActionState } from "@/lib/auth-types";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select } from "@/components/ui/select";
-import {
-  BRANDS,
-  CITIES,
-  CLOTHING_SIZES,
-  DEAL_METHOD_LABELS,
-  SHOE_SIZES,
-} from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import Script from "next/script";
+import { signIn } from "next-auth/react";
+import { Send, ShieldCheck, Sparkles } from "lucide-react";
 
-type Mode = "register" | "login";
+import { Button } from "@/components/ui/button";
 
 type AuthFlowProps = {
-  callbackUrl: string;
-  showOnboarding?: boolean;
+  /**
+   * Куда перейти после успешной авторизации.
+   *
+   * Например:
+   * /catalog
+   * /profile
+   * /sell
+   */
+  callbackUrl?: string;
+
+  /**
+   * Ошибка, которая могла прийти из URL или server component.
+   */
+  initialError?: string;
+
+  /**
+   * Username Telegram-бота без символа @.
+   *
+   * Например:
+   * shops88_bot
+   */
+  telegramBotUsername?: string;
 };
 
-const interestOptions = ["одежда", "кроссовки", "аксессуары"] as const;
+/**
+ * Данные, которые официальный Telegram Login Widget
+ * передаёт после успешного подтверждения пользователя.
+ */
+type TelegramLoginUser = {
+  id: number;
+  first_name: string;
+  last_name?: string;
+  username?: string;
+  photo_url?: string;
+  auth_date: number;
+  hash: string;
+};
 
-export function AuthFlow({ callbackUrl, showOnboarding = false }: AuthFlowProps) {
-  const [mode, setMode] = useState<Mode>("register");
-  const [passwordVisible, setPasswordVisible] = useState(false);
-  const [registerState, registerFormAction] = useActionState<AuthActionState, FormData>(
-    registerAction,
-    {},
-  );
-  const [loginState, loginFormAction] = useActionState<AuthActionState, FormData>(
-    loginAction,
-    {},
-  );
+/**
+ * Дополняем стандартный тип Window объектами Telegram.
+ */
+type TelegramWindow = Window & {
+  Telegram?: {
+    WebApp?: {
+      /**
+       * Подписанные данные пользователя,
+       * когда сайт открыт внутри Telegram Mini App.
+       */
+      initData?: string;
 
-  if (showOnboarding) {
-    return <OnboardingFlow callbackUrl={callbackUrl} />;
+      /**
+       * Сообщает Telegram, что Mini App загрузилось.
+       */
+      ready?: () => void;
+
+      /**
+       * Разворачивает Mini App по высоте.
+       */
+      expand?: () => void;
+    };
+  };
+
+  /**
+   * Эту функцию вызывает официальный Telegram Login Widget.
+   */
+  onTelegramAuth?: (user: TelegramLoginUser) => void;
+};
+
+export function AuthFlow({
+  callbackUrl = "/catalog",
+  initialError = "",
+  telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME,
+}: AuthFlowProps) {
+  /**
+   * Сообщение об ошибке или временное уведомление.
+   */
+  const [error, setError] = useState(initialError);
+
+  /**
+   * Показывает, выполняется ли сейчас Telegram-вход.
+   */
+  const [pendingTelegram, setPendingTelegram] = useState(false);
+
+  /**
+   * Нужно ли показать официальный Telegram Login Widget.
+   *
+   * Он используется в обычном браузере.
+   * Внутри Telegram Mini App виджет не нужен.
+   */
+  const [showTelegramWidget, setShowTelegramWidget] = useState(false);
+
+  /**
+   * Отправляет данные Telegram непосредственно
+   * в Auth.js Credentials provider с id="telegram".
+   */
+  async function submitTelegram(credentials: {
+    initData?: string;
+    loginData?: string;
+  }) {
+    setPendingTelegram(true);
+    setError("");
+
+    try {
+      /**
+       * Auth.js найдёт этот provider:
+       *
+       * Credentials({
+       *   id: "telegram",
+       *   async authorize(credentials) { ... }
+       * })
+       *
+       * И передаст туда initData или loginData.
+       */
+      const result = await signIn("telegram", {
+        ...credentials,
+
+        /**
+         * Не даём Auth.js сразу перезагружать страницу.
+         * Сначала сами проверим результат.
+         */
+        redirect: false,
+
+        /**
+         * Адрес перехода после успешного входа.
+         *
+         * В Auth.js v5 используется redirectTo.
+         */
+        redirectTo: callbackUrl,
+      });
+
+      /**
+       * Если Auth.js вернул ошибку,
+       * значит authorize() вернул null
+       * либо произошла серверная ошибка.
+       */
+      if (!result || result.error) {
+        setError(
+          "Не получилось войти через Telegram. Проверь настройки бота и попробуй ещё раз.",
+        );
+
+        return;
+      }
+
+      /**
+       * При успешном входе Auth.js создаёт JWT-сессию
+       * и возвращает URL для перехода.
+       */
+      window.location.assign(result.url ?? callbackUrl);
+    } catch (authError) {
+      console.error("[telegram-auth]", authError);
+
+      setError(
+        "Сервер авторизации временно недоступен. Попробуй ещё раз.",
+      );
+    } finally {
+      setPendingTelegram(false);
+    }
+  }
+
+  /**
+   * Подключаем поведение Telegram после загрузки страницы.
+   */
+  useEffect(() => {
+    const telegramWindow = window as TelegramWindow;
+
+    /**
+     * Эти команды сработают только если сайт открыт
+     * как Telegram Mini App.
+     *
+     * В обычном браузере ошибок не будет
+     * благодаря optional chaining.
+     */
+    telegramWindow.Telegram?.WebApp?.ready?.();
+    telegramWindow.Telegram?.WebApp?.expand?.();
+
+    /**
+     * Официальный Telegram Login Widget вызывает эту функцию:
+     *
+     * window.onTelegramAuth(user)
+     */
+    telegramWindow.onTelegramAuth = (user) => {
+      /**
+       * credentials provider принимает строковые значения,
+       * поэтому превращаем объект пользователя в JSON.
+       */
+      void submitTelegram({
+        loginData: JSON.stringify(user),
+      });
+    };
+
+    /**
+     * Удаляем глобальный callback,
+     * когда компонент исчезает со страницы.
+     */
+    return () => {
+      delete telegramWindow.onTelegramAuth;
+    };
+  }, [callbackUrl]);
+
+  /**
+   * Нажатие на основную Telegram-кнопку.
+   */
+  function handleTelegramLogin() {
+    const telegramWindow = window as TelegramWindow;
+
+    /**
+     * Если сайт открыт внутри Telegram,
+     * здесь будет подписанная строка initData.
+     */
+    const initData = telegramWindow.Telegram?.WebApp?.initData;
+
+    setError("");
+
+    /**
+     * Сценарий 1:
+     * приложение открыто внутри Telegram Mini App.
+     */
+    if (initData) {
+      void submitTelegram({
+        initData,
+      });
+
+      return;
+    }
+
+    /**
+     * Сценарий 2:
+     * сайт открыт в Chrome, Safari или другом браузере.
+     *
+     * Показываем официальный Telegram Login Widget.
+     */
+    if (telegramBotUsername) {
+      setShowTelegramWidget(true);
+
+      return;
+    }
+
+    /**
+     * До этого места код дойдёт,
+     * если переменная username не загрузилась.
+     */
+    setError(
+      "Не найден NEXT_PUBLIC_TELEGRAM_BOT_USERNAME. Перезапусти сервер после изменения .env.local.",
+    );
+  }
+
+  /**
+   * Google пока оставляем заглушкой.
+   */
+  function handleGoogleLogin() {
+    setShowTelegramWidget(false);
+
+    setError(
+      "Вход через Google пока не подключён. Используй Telegram.",
+    );
   }
 
   return (
-    <div className="grid min-h-[calc(100vh-4rem)] lg:grid-cols-[52%_48%]">
-      <section className="relative hidden overflow-hidden border-r border-white/10 lg:block">
-        <div className="absolute inset-0 wet-fabric" />
-        <div className="absolute inset-0 bg-gradient-to-t from-night via-night/35 to-transparent" />
-        <div className="relative flex h-full flex-col justify-between p-10">
-          <div className="inline-flex items-center gap-2">
+    <main className="flex min-h-[calc(100svh-4rem)] items-center justify-center px-4 py-6 sm:px-6">
+      <section className="w-full max-w-[26rem] rounded-[8px] border border-black/10 bg-white p-5 shadow-sm shadow-black/5 sm:p-6">
+        {/* Логотип и заголовок */}
+        <div className="text-center">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2 text-black"
+          >
             <span className="flex h-10 w-10 items-center justify-center rounded-[8px] bg-lime text-sm font-black text-black">
               88
             </span>
-            <span className="text-xl font-semibold text-cream">88Shops</span>
-          </div>
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.24em] text-lime">
-              FASHION RESALE MARKETPLACE
-            </p>
-            <h1 className="mt-5 max-w-2xl font-serif text-7xl leading-none text-cream">
-              Покупай и продавай без лишнего шума.
-            </h1>
-            <p className="mt-6 max-w-lg text-base leading-7 text-cream/62">
-              Одежда, кроссовки и магазины в одном месте. Один аккаунт для
-              покупок, продаж и своего каталога.
-            </p>
-          </div>
-        </div>
-      </section>
 
-      <section className="flex items-center justify-center px-4 py-10 sm:px-6 lg:px-12">
-        <div className="w-full max-w-xl rounded-[8px] border border-white/10 bg-white/[0.045] p-5 sm:p-7">
-          <div className="mb-6 flex rounded-[8px] border border-white/10 bg-black/20 p-1">
-            {(["register", "login"] as const).map((item) => (
-              <button
-                key={item}
-                type="button"
-                onClick={() => setMode(item)}
-                className={cn(
-                  "min-h-11 flex-1 rounded-[7px] text-sm font-semibold text-cream/55 transition",
-                  mode === item && "bg-lime text-black",
-                )}
-              >
-                {item === "register" ? "Создать аккаунт" : "Войти"}
-              </button>
-            ))}
-          </div>
+            <span className="text-xl font-semibold">
+              88Shops
+            </span>
+          </Link>
 
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Button type="button" variant="secondary" disabled>
-              <Send aria-hidden className="h-4 w-4" />
-              Telegram скоро
-            </Button>
-            <Button type="button" variant="secondary" disabled>
-              <Sparkles aria-hidden className="h-4 w-4" />
-              Google скоро
-            </Button>
-          </div>
+          <h1 className="mt-5 text-2xl font-semibold text-black">
+            Войти в 88Shops
+          </h1>
 
-          {mode === "register" ? (
-            <form action={registerFormAction} className="mt-6 grid gap-4">
-              <input type="hidden" name="callbackUrl" value={callbackUrl} />
-              <div>
-                <h1 className="text-3xl font-semibold text-cream">Создать аккаунт</h1>
-                <p className="mt-2 text-sm text-cream/56">Займёт меньше минуты.</p>
-              </div>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Имя">
-                  <Input name="firstName" autoComplete="given-name" required />
-                </Field>
-                <Field label="Фамилия">
-                  <Input name="lastName" autoComplete="family-name" required />
-                </Field>
-              </div>
-              <Field
-                label="Ник"
-                helper="Так тебя увидят покупатели и продавцы."
-              >
-                <Input name="username" autoComplete="username" required />
-              </Field>
-              <Field label="Email">
-                <Input name="email" type="email" autoComplete="email" required />
-              </Field>
-              <Field label="Пароль" helper="Минимум 8 символов.">
-                <PasswordInput
-                  name="password"
-                  visible={passwordVisible}
-                  onToggle={() => setPasswordVisible((value) => !value)}
-                />
-              </Field>
-              <Field label="Повторите пароль">
-                <Input
-                  name="confirmPassword"
-                  type={passwordVisible ? "text" : "password"}
-                  autoComplete="new-password"
-                  required
-                />
-              </Field>
-              <Field label="Что планируешь делать?">
-                <Select name="intent" defaultValue="BOTH">
-                  <option value="BUY">Покупать</option>
-                  <option value="SELL">Продавать</option>
-                  <option value="BOTH">И то и другое</option>
-                </Select>
-              </Field>
-              <label className="flex items-start gap-3 text-sm leading-6 text-cream/62">
-                <input name="accepted" type="checkbox" className="mt-1 h-4 w-4 accent-lime" required />
-                <span>Я принимаю правила сервиса и политику конфиденциальности</span>
-              </label>
-              {registerState.error ? <FormError>{registerState.error}</FormError> : null}
-              <SubmitButton label="Создать аккаунт" />
-              <p className="text-center text-sm text-cream/52">
-                Уже есть аккаунт?{" "}
-                <button
-                  type="button"
-                  className="font-semibold text-lime"
-                  onClick={() => setMode("login")}
-                >
-                  Войти
-                </button>
-              </p>
-            </form>
-          ) : (
-            <form action={loginFormAction} className="mt-6 grid gap-4">
-              <input type="hidden" name="callbackUrl" value={callbackUrl} />
-              <div>
-                <h1 className="text-3xl font-semibold text-cream">Войти</h1>
-                <p className="mt-2 text-sm text-cream/56">
-                  Вернись к сохранённым вещам и своим объявлениям.
-                </p>
-              </div>
-              <Field label="Email или ник">
-                <Input name="identifier" autoComplete="username" required />
-              </Field>
-              <Field label="Пароль">
-                <PasswordInput
-                  name="password"
-                  visible={passwordVisible}
-                  onToggle={() => setPasswordVisible((value) => !value)}
-                />
-              </Field>
-              <button
-                type="button"
-                disabled
-                className="min-h-11 justify-self-start rounded-[8px] px-0 text-sm font-semibold text-cream/40"
-              >
-                Забыли пароль? Скоро
-              </button>
-              {loginState.error ? <FormError>{loginState.error}</FormError> : null}
-              <SubmitButton label="Войти" />
-              <p className="text-center text-sm text-cream/52">
-                Нет аккаунта?{" "}
-                <button
-                  type="button"
-                  className="font-semibold text-lime"
-                  onClick={() => setMode("register")}
-                >
-                  Зарегистрироваться
-                </button>
-              </p>
-            </form>
-          )}
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function OnboardingFlow({ callbackUrl }: { callbackUrl: string }) {
-  const [step, setStep] = useState<1 | 2>(1);
-  const [state, formAction] = useActionState<OnboardingActionState, FormData>(
-    completeOnboardingAction,
-    {},
-  );
-
-  return (
-    <div className="page-shell flex min-h-[calc(100vh-4rem)] items-center justify-center py-10">
-      <div className="w-full max-w-3xl rounded-[8px] border border-white/10 bg-white/[0.045] p-5 sm:p-8">
-        <div className="mb-6 flex items-center justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-lime">
-              {step === 1 ? "Профиль" : "Каталог"}
-            </p>
-            <h1 className="mt-3 text-3xl font-semibold text-cream">
-              {step === 1 ? "Сделай профиль своим" : "Настроим каталог"}
-            </h1>
-            <p className="mt-2 max-w-xl text-sm leading-6 text-cream/56">
-              {step === 1
-                ? "Добавь аватар, город и пару слов о себе. Так другим проще понять, с кем они общаются."
-                : "Выбери бренды и размеры — так искать вещи будет быстрее."}
-            </p>
-          </div>
-          <span className="rounded-[8px] border border-white/10 px-3 py-2 text-sm font-semibold text-cream/58">
-            {step}/2
-          </span>
+          <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-black/60">
+            Один аккаунт для покупок, продаж, избранного и своего
+            магазина.
+          </p>
         </div>
 
-        <form action={formAction} className="grid gap-5">
-          <input type="hidden" name="callbackUrl" value={callbackUrl} />
-          <div className={cn("grid gap-4", step !== 1 && "hidden")}>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Аватар">
-                <Input name="avatar" placeholder="Ссылка на фото" />
-              </Field>
-              <Field label="Обложка">
-                <Input name="cover" placeholder="Ссылка на изображение" />
-              </Field>
-            </div>
-            <Field label="Город">
-              <Select name="city" defaultValue="Москва">
-                {CITIES.map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <Field label="Короткое описание">
-              <textarea
-                name="bio"
-                rows={4}
-                className="w-full rounded-[8px] border border-white/10 bg-white/[0.055] px-4 py-3 text-sm text-cream outline-none transition placeholder:text-cream/38 focus:border-lime/70"
-                placeholder="Что продаёшь, что ищешь, где удобно встретиться."
-              />
-            </Field>
-            <CheckboxGroup title="Интересы" name="categories" values={interestOptions} />
-            <Field label="Тип интересов">
-              <Select name="authenticityPreference" defaultValue="BOTH">
-                <option value="ORIGINAL">Original</option>
-                <option value="REPLICA">Replica</option>
-                <option value="BOTH">Всё</option>
-              </Select>
-            </Field>
-          </div>
-
-          <div className={cn("grid gap-4", step !== 2 && "hidden")}>
-            <CheckboxGroup title="Любимые бренды" name="brands" values={BRANDS} />
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Размер одежды">
-                <Select name="clothingSize" defaultValue="M">
-                  {CLOTHING_SIZES.map((size) => (
-                    <option key={size} value={size}>
-                      {size}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-              <Field label="Размер обуви">
-                <Select name="shoeSize" defaultValue="42">
-                  {SHOE_SIZES.map((size) => (
-                    <option key={size} value={size}>
-                      EU {size}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-            </div>
-            <Field label="Город">
-              <Select name="dealCity" defaultValue="Москва">
-                {CITIES.map((city) => (
-                  <option key={city} value={city}>
-                    {city}
-                  </option>
-                ))}
-              </Select>
-            </Field>
-            <CheckboxGroup
-              title="Способы сделки"
-              name="dealMethods"
-              values={Object.keys(DEAL_METHOD_LABELS)}
-              labels={{
-                PERSONAL_MEETING: "личная встреча",
-                DIRECT: "напрямую",
-                SAFE_DEAL: "безопасная сделка",
-              }}
-            />
-          </div>
-
-          {state.error ? <FormError>{state.error}</FormError> : null}
-
-          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-            {step === 1 ? (
-              <>
-                <Button type="button" onClick={() => setStep(2)}>
-                  Продолжить
-                  <ArrowRight aria-hidden className="h-4 w-4" />
-                </Button>
-                <button
-                  type="submit"
-                  formAction={skipOnboardingAction}
-                  className="min-h-11 rounded-[8px] px-4 text-sm font-semibold text-cream/55 transition hover:text-lime"
-                >
-                  Заполню позже
-                </button>
-              </>
-            ) : (
-              <>
-                <Button type="button" variant="secondary" onClick={() => setStep(1)}>
-                  Назад
-                </Button>
-                <SubmitButton label="Открыть 88Shops" />
-              </>
-            )}
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
-function PasswordInput({
-  name,
-  visible,
-  onToggle,
-}: {
-  name: string;
-  visible: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div className="relative">
-      <Input
-        name={name}
-        type={visible ? "text" : "password"}
-        autoComplete={name === "password" ? "new-password" : "current-password"}
-        required
-      />
-      <button
-        type="button"
-        onClick={onToggle}
-        className="absolute right-2 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-[8px] text-cream/55 transition hover:text-lime"
-        aria-label={visible ? "Скрыть пароль" : "Показать пароль"}
-      >
-        {visible ? <EyeOff aria-hidden className="h-4 w-4" /> : <Eye aria-hidden className="h-4 w-4" />}
-      </button>
-    </div>
-  );
-}
-
-function CheckboxGroup({
-  title,
-  name,
-  values,
-  labels,
-}: {
-  title: string;
-  name: string;
-  values: readonly string[];
-  labels?: Partial<Record<string, string>>;
-}) {
-  return (
-    <div>
-      <p className="mb-3 text-xs font-semibold uppercase tracking-[0.16em] text-cream/42">
-        {title}
-      </p>
-      <div className="grid gap-2 sm:grid-cols-2">
-        {values.map((value) => (
-          <label
-            key={value}
-            className="flex min-h-11 items-center gap-3 rounded-[8px] border border-white/10 bg-black/18 px-3 text-sm text-cream/70"
+        {/* Способы авторизации */}
+        <div className="mt-6 grid gap-3">
+          <Button
+            type="button"
+            size="lg"
+            className="w-full"
+            onClick={handleTelegramLogin}
+            disabled={pendingTelegram}
           >
-            <input name={name} type="checkbox" value={value} className="h-4 w-4 accent-lime" />
-            <span>{labels?.[value] ?? value}</span>
-          </label>
-        ))}
-      </div>
-    </div>
-  );
-}
+            <Send
+              aria-hidden="true"
+              className="h-5 w-5"
+            />
 
-function Field({
-  label,
-  helper,
-  children,
-}: {
-  label: string;
-  helper?: string;
-  children: ReactNode;
-}) {
-  return (
-    <label>
-      <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-cream/42">
-        {label}
-      </span>
-      {children}
-      {helper ? <span className="mt-2 block text-xs text-cream/42">{helper}</span> : null}
-    </label>
-  );
-}
+            {pendingTelegram
+              ? "Входим через Telegram..."
+              : "Продолжить с Telegram"}
+          </Button>
 
-function FormError({ children }: { children: ReactNode }) {
-  return (
-    <div className="rounded-[8px] border border-red-300/25 bg-red-400/10 p-3 text-sm text-red-100">
-      {children}
-    </div>
-  );
-}
+          {/*
+           * Этот виджет показывается только:
+           *
+           * 1. в обычном браузере;
+           * 2. после нажатия кнопки Telegram;
+           * 3. если username бота существует.
+           */}
+          {showTelegramWidget && telegramBotUsername ? (
+            <div className="flex min-h-16 items-center justify-center rounded-[8px] border border-black/10 bg-black/[0.025] px-3 py-3">
+              <Script
+                id="telegram-login-widget"
+                src="https://telegram.org/js/telegram-widget.js?22"
+                strategy="afterInteractive"
 
-function SubmitButton({ label }: { label: string }) {
-  const { pending } = useFormStatus();
+                /**
+                 * Username бота без символа @.
+                 */
+                data-telegram-login={telegramBotUsername}
 
-  return (
-    <Button type="submit" size="lg" className="w-full" disabled={pending}>
-      <LockKeyhole aria-hidden className="h-4 w-4" />
-      {pending ? "Секунду..." : label}
-    </Button>
+                /**
+                 * Настройки внешнего вида виджета.
+                 */
+                data-size="large"
+                data-radius="8"
+
+                /**
+                 * После успешного подтверждения Telegram вызовет:
+                 *
+                 * window.onTelegramAuth(user)
+                 */
+                data-onauth="window.onTelegramAuth(user)"
+
+                /**
+                 * Даёт боту возможность в дальнейшем
+                 * отправлять пользователю сообщения.
+                 *
+                 * Для одной только авторизации можно удалить,
+                 * но для 88Shops это может пригодиться.
+                 */
+                data-request-access="write"
+              />
+            </div>
+          ) : null}
+
+          {/* Google пока только визуальная заглушка */}
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            className="w-full"
+            onClick={handleGoogleLogin}
+          >
+            <Sparkles
+              aria-hidden="true"
+              className="h-5 w-5"
+            />
+
+            Продолжить с Google
+          </Button>
+        </div>
+
+        {/* Ошибка или информационное сообщение */}
+        {error ? (
+          <p
+            role="alert"
+            className="mt-4 rounded-[8px] border border-red-200 bg-red-50 p-3 text-sm leading-6 text-red-700"
+          >
+            {error}
+          </p>
+        ) : null}
+
+        {/* Позже сделай правила и политику отдельными ссылками */}
+        <p className="mt-5 text-center text-xs leading-5 text-black/45">
+          Продолжая, ты принимаешь правила сервиса и политику
+          конфиденциальности.
+        </p>
+
+        {/* Возврат в каталог без авторизации */}
+        <div className="mt-5 flex justify-center">
+          <Link
+            href="/catalog"
+            className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[8px] px-3 text-sm font-semibold text-black/60 transition hover:bg-black/[0.04] hover:text-black"
+          >
+            <ShieldCheck
+              aria-hidden="true"
+              className="h-4 w-4"
+            />
+
+            Вернуться в каталог
+          </Link>
+        </div>
+      </section>
+    </main>
   );
 }

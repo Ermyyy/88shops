@@ -15,14 +15,14 @@ export function Tabs({ items, className }: { items: TabItem[]; className?: strin
 
   return (
     <div className={className}>
-      <div className="flex gap-2 overflow-x-auto border-b border-white/10 pb-2">
+      <div className="flex gap-2 overflow-x-auto border-b border-black/10 pb-2">
         {items.map((item) => (
           <button
             key={item.id}
             type="button"
             onClick={() => setActiveId(item.id)}
             className={cn(
-              "min-h-11 whitespace-nowrap rounded-[8px] px-4 text-sm font-semibold text-cream/58 transition hover:bg-white/[0.06] hover:text-cream",
+              "min-h-11 whitespace-nowrap rounded-[8px] px-4 text-sm font-semibold text-cream/58 transition hover:bg-[#f6f6f4] hover:text-cream",
               item.id === active?.id && "bg-lime text-black hover:bg-lime hover:text-black",
             )}
           >

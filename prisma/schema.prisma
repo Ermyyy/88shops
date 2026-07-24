@@ -62,11 +62,15 @@ enum AuthenticityPreference {
 model User {
   id                    String                 @id @default(cuid())
   email                 String?                @unique
-  username              String                 @unique
-  firstName             String
-  lastName              String
+  emailVerified         DateTime?
+  name                  String?
+  image                 String?
+  username              String?                @unique
+  firstName             String?
+  lastName              String?
   passwordHash          String?
   telegramId            String?                @unique
+  telegramUsername      String?
   avatarUrl             String?
   coverUrl              String?
   bio                   String?

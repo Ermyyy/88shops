@@ -20,7 +20,7 @@ export function ShopActions({ isAuthenticated = false }: ShopActionsProps) {
   };
 
   return (
-    <div className="flex flex-col gap-3 sm:flex-row">
+    <div className="flex flex-col gap-2 sm:flex-row">
       <Button
         type="button"
         onClick={() => handleAction("Подписки скоро появятся.")}
@@ -31,7 +31,7 @@ export function ShopActions({ isAuthenticated = false }: ShopActionsProps) {
       <Button
         type="button"
         variant="secondary"
-        onClick={() => handleAction("Чат скоро появится.")}
+        onClick={() => handleAction("Сообщения скоро появятся.")}
       >
         <MessageCircle aria-hidden className="h-4 w-4" />
         Сообщение

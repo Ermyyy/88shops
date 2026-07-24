@@ -42,7 +42,7 @@ export function Drawer({ open, title, onClose, children, side = "right" }: Drawe
       <button
         type="button"
         aria-label="Закрыть меню"
-        className="absolute inset-0 bg-black/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-black/35"
         onClick={onClose}
       />
       <aside
@@ -50,7 +50,7 @@ export function Drawer({ open, title, onClose, children, side = "right" }: Drawe
         aria-modal="true"
         aria-labelledby="drawer-title"
         className={cn(
-          "absolute top-0 flex h-full w-full max-w-sm flex-col overflow-y-auto border-white/10 bg-night p-5 shadow-2xl",
+          "absolute top-0 flex h-full w-full max-w-sm flex-col overflow-y-auto border-black/10 bg-white p-5 shadow-2xl",
           side === "right" ? "right-0 border-l" : "left-0 border-r",
         )}
       >
@@ -59,7 +59,7 @@ export function Drawer({ open, title, onClose, children, side = "right" }: Drawe
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex h-11 w-11 items-center justify-center rounded-[8px] border border-white/10 text-cream/70 transition hover:border-lime/50 hover:text-lime"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-[10px] border border-black/10 text-black/65 transition hover:border-black/20 hover:bg-black/[0.04]"
             aria-label="Закрыть меню"
           >
             <X aria-hidden className="h-5 w-5" />

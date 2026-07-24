@@ -1,7 +1,10 @@
 import type { Deal, Product, Review, Shop, User } from "@/types";
 
-const img = (id: string, width = 900) =>
-  `https://images.unsplash.com/${id}?auto=format&fit=crop&w=${width}&q=82`;
+const img = (id: string, width = 900) => {
+  void id;
+  void width;
+  return undefined;
+};
 
 export const users: User[] = [
   {

@@ -42,9 +42,7 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const product = getProductById(id);
 
   if (!product) {
-    return {
-      title: "Товар не найден",
-    };
+    return { title: "Товар не найден" };
   }
 
   return {
@@ -53,7 +51,6 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     openGraph: {
       title: product.title,
       description: product.description,
-      images: product.images[0]?.url ? [{ url: product.images[0].url }] : undefined,
     },
   };
 }
@@ -73,87 +70,74 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const isAuthenticated = await hasSessionCookie();
 
   return (
-    <div className="page-shell py-10">
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_26rem]">
+    <div className="page-shell py-5 md:py-7">
+      <nav className="mb-4 flex items-center gap-2 text-sm text-black/50">
+        <Link href="/catalog" className="hover:text-black">
+          Каталог
+        </Link>
+        <span>/</span>
+        <span className="truncate text-black/70">{product.title}</span>
+      </nav>
+
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_24rem]">
         <ProductGallery images={product.images} title={product.title} />
 
         <aside className="lg:sticky lg:top-24 lg:self-start">
-          <div className="rounded-[8px] border border-white/10 bg-white/[0.045] p-5">
+          <div className="rounded-[8px] border border-black/10 bg-white p-4 shadow-sm shadow-black/5">
             <div className="flex flex-wrap gap-2">
               <Badge variant={product.authenticityType === "ORIGINAL" ? "lime" : "warning"}>
                 {AUTHENTICITY_LABELS[product.authenticityType]}
               </Badge>
               <Badge>{CONDITION_LABELS[product.condition]}</Badge>
             </div>
-            <p className="mt-5 text-xs font-semibold uppercase tracking-[0.2em] text-lime">
-              {product.brand}
-            </p>
-            <h1 className="mt-3 text-3xl font-semibold leading-tight text-cream">
+
+            <p className="mt-4 text-sm font-semibold text-black/55">{product.brand}</p>
+            <h1 className="mt-1 text-2xl font-semibold leading-tight text-black md:text-3xl">
               {product.title}
             </h1>
-            <div className="mt-5">
-              <Price value={product.priceKopecks} className="text-3xl" />
-            </div>
+            <Price value={product.priceKopecks} className="mt-4 text-3xl" />
 
-            <dl className="mt-6 grid grid-cols-2 gap-3 border-y border-white/10 py-5 text-sm">
-              <div>
-                <dt className="text-cream/42">Размер</dt>
-                <dd className="mt-1 font-semibold text-cream">{getProductSize(product)}</dd>
-              </div>
-              <div>
-                <dt className="text-cream/42">Город</dt>
-                <dd className="mt-1 font-semibold text-cream">{product.city}</dd>
-              </div>
-              <div>
-                <dt className="text-cream/42">Категория</dt>
-                <dd className="mt-1 font-semibold capitalize text-cream">
-                  {product.category}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-cream/42">Добавлено</dt>
-                <dd className="mt-1 font-semibold text-cream">
-                  {formatDate(product.createdAt)}
-                </dd>
-              </div>
+            <dl className="mt-5 grid grid-cols-2 gap-3 border-y border-black/10 py-4 text-sm">
+              <Spec label="Размер" value={getProductSize(product)} />
+              <Spec label="Город" value={product.city} />
+              <Spec label="Категория" value={product.category} />
+              <Spec label="Добавлено" value={formatDate(product.createdAt)} />
             </dl>
 
-            <p className="mt-5 text-sm leading-6 text-cream/62">{product.description}</p>
+            <p className="mt-4 text-sm leading-6 text-black/62">{product.description}</p>
 
-            <div className="mt-6 rounded-[8px] border border-white/10 bg-black/24 p-4">
-              <p className="mb-4 text-xs font-semibold uppercase tracking-[0.18em] text-cream/42">
-                О продавце
-              </p>
-              <Link
-                href={seller.href}
-                className="flex items-center gap-4 transition hover:text-lime"
-              >
-                <Avatar src={seller.avatarUrl} name={seller.name} frame={seller.verified ? "lime" : "none"} />
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="truncate font-semibold text-cream">{seller.name}</p>
-                    {seller.verified ? <Badge variant="lime">Verified</Badge> : null}
-                  </div>
-                  <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-cream/52">
-                    <Rating value={seller.rating} />
-                    <span>{seller.salesCount} продаж</span>
-                  </div>
+            <Link
+              href={seller.href}
+              className="mt-5 flex items-center gap-3 rounded-[8px] border border-black/10 bg-[#f6f6f4] p-3 transition hover:border-black/20"
+            >
+              <Avatar
+                name={seller.name}
+                frame={seller.verified ? "lime" : "none"}
+              />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="truncate font-semibold text-black">{seller.name}</p>
+                  {seller.verified ? <Badge variant="lime">Verified</Badge> : null}
                 </div>
-              </Link>
-            </div>
+                <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 text-xs text-black/55">
+                  <Rating value={seller.rating} />
+                  <span>{seller.salesCount} продаж</span>
+                </div>
+              </div>
+            </Link>
 
-            <div className="mt-6">
+            <div className="mt-4">
               <ProductActions productId={product.id} isAuthenticated={isAuthenticated} />
             </div>
           </div>
         </aside>
       </div>
 
-      <section className="mt-12 grid gap-6 lg:grid-cols-[1fr_26rem]">
-        <div className="rounded-[8px] border border-white/10 bg-white/[0.04] p-6">
-          <div className="mb-5 flex items-center gap-3">
-            <PackageCheck aria-hidden className="h-5 w-5 text-lime" />
-            <h2 className="text-2xl font-semibold text-cream">Как купить</h2>
+      <section className="mt-8 grid gap-4 lg:grid-cols-[1fr_24rem]">
+        <div className="rounded-[8px] border border-black/10 bg-white p-4">
+          <div className="mb-4 flex items-center gap-2">
+            <PackageCheck aria-hidden className="h-5 w-5 text-black" />
+            <h2 className="text-lg font-semibold text-black">Как купить</h2>
           </div>
           <div className="grid gap-3 md:grid-cols-3">
             {product.dealMethods.map((method) => (
@@ -167,54 +151,57 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </div>
 
-        <div className="rounded-[8px] border border-amber-300/25 bg-amber-300/10 p-6">
+        <div className="rounded-[8px] border border-amber-300/45 bg-amber-50 p-4">
           <div className="flex items-start gap-3">
-            <ShieldAlert aria-hidden className="mt-1 h-5 w-5 shrink-0 text-amber-200" />
+            <ShieldAlert aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
             <div>
-              <h2 className="font-semibold text-amber-100">Безопасная сделка скоро</h2>
-              <p className="mt-2 text-sm leading-6 text-amber-50/70">
-                {DEAL_METHOD_LABELS.SAFE_DEAL}: готовим защищённый сценарий оплаты и доставки.
+              <h2 className="font-semibold text-black">Безопасная сделка скоро</h2>
+              <p className="mt-1 text-sm leading-6 text-black/62">
+                {DEAL_METHOD_LABELS.SAFE_DEAL}: готовим защищенный сценарий
+                оплаты и доставки.
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mt-12 rounded-[8px] border border-white/10 bg-white/[0.04] p-6">
-        <div className="mb-6 flex items-center gap-3">
-          <AlertTriangle aria-hidden className="h-5 w-5 text-lime" />
-          <h2 className="text-2xl font-semibold text-cream">Отзывы</h2>
+      <section className="mt-8 rounded-[8px] border border-black/10 bg-white p-4">
+        <div className="mb-4 flex items-center gap-2">
+          <AlertTriangle aria-hidden className="h-5 w-5 text-black" />
+          <h2 className="text-lg font-semibold text-black">Отзывы</h2>
         </div>
-        <div className="grid gap-4 md:grid-cols-2">
+        <div className="grid gap-3 md:grid-cols-2">
           {reviews.length > 0 ? (
             reviews.map((review) => {
               const author = getUserById(review.authorId);
 
               return (
-                <article key={review.id} className="rounded-[8px] border border-white/10 p-4">
+                <article key={review.id} className="rounded-[8px] border border-black/10 p-4">
                   <div className="mb-3 flex items-center gap-3">
-                    <Avatar src={author?.avatarUrl} name={author?.displayName ?? "Покупатель"} />
+                    <Avatar
+                      name={author?.displayName ?? "Покупатель"}
+                    />
                     <div>
-                      <p className="font-semibold text-cream">
+                      <p className="font-semibold text-black">
                         {author?.displayName ?? "Покупатель"}
                       </p>
                       <Rating value={review.rating} />
                     </div>
                   </div>
-                  <p className="text-sm leading-6 text-cream/60">{review.text}</p>
+                  <p className="text-sm leading-6 text-black/60">{review.text}</p>
                 </article>
               );
             })
           ) : (
-            <p className="text-sm text-cream/55">Для этого продавца пока нет отзывов.</p>
+            <p className="text-sm text-black/55">У этого продавца пока нет отзывов.</p>
           )}
         </div>
       </section>
 
       {related.length > 0 ? (
-        <section className="mt-16">
+        <section className="mt-10">
           <SectionHeading title="Похожие товары" eyebrow="Еще в подборке" />
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
             {related.map((item) => (
               <ProductCard
                 key={item.id}
@@ -225,6 +212,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </section>
       ) : null}
+    </div>
+  );
+}
+
+function Spec({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-black/45">{label}</dt>
+      <dd className="mt-0.5 truncate font-semibold text-black">{value}</dd>
     </div>
   );
 }

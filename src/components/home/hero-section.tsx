@@ -1,79 +1,65 @@
 import Link from "next/link";
-import { ArrowRight, Search, Sparkles } from "lucide-react";
+import { MapPin, Search } from "lucide-react";
 import { LinkButton } from "@/components/ui/button";
-import { SafeImage } from "@/components/ui/safe-image";
 
-const quickSearches = ["Stone Island L", "LV Trainer 43", "Rick Owens", "куртка до 20 000 ₽"];
+const quickSearches = ["Stone Island", "кроссовки 43", "куртка", "Rick Owens", "сумка"];
 
 export function HeroSection() {
   return (
-    <section className="relative min-h-[calc(100vh-4rem)] overflow-hidden border-b border-white/10">
-      <SafeImage
-        src="https://images.unsplash.com/photo-1523398002811-999ca8dec234?auto=format&fit=crop&w=1800&q=84"
-        alt="Одежда и аксессуары для fashion resale"
-        fill
-        sizes="100vw"
-        priority
-        className="object-cover"
-      />
-      <div className="absolute inset-0 bg-gradient-to-r from-night via-night/72 to-night/15" />
-      <div className="absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-night to-transparent" />
+    <section className="border-b border-black/10 bg-white">
+      <div className="page-shell py-6">
+        <div className="grid gap-4 lg:grid-cols-[1fr_auto] lg:items-end">
+          <div>
+            <h1 className="text-2xl font-bold text-black md:text-3xl">
+              Купить и продать одежду, обувь и аксессуары
+            </h1>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-black/55">
+              Объявления от частных продавцов и магазинов 88Shops. Ищи по
+              бренду, размеру, городу или модели.
+            </p>
+          </div>
+          <LinkButton href="/sell" size="sm">
+            Разместить объявление
+          </LinkButton>
+        </div>
 
-      <div className="page-shell relative flex min-h-[calc(100vh-4rem)] items-center py-16">
-        <div className="max-w-4xl">
-          <p className="mb-5 inline-flex items-center gap-2 rounded-[8px] border border-lime/25 bg-black/34 px-3 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-lime backdrop-blur">
-            <Sparkles aria-hidden className="h-3.5 w-3.5" />
-            FASHION RESALE MARKETPLACE
-          </p>
-          <h1 className="max-w-4xl font-serif text-6xl leading-none text-cream sm:text-7xl lg:text-8xl">
-            Найди вещь, которую давно искал
-          </h1>
-          <p className="mt-7 max-w-2xl text-base leading-7 text-cream/72 sm:text-lg sm:leading-8">
-            Одежда, кроссовки и аксессуары от частных продавцов и магазинов.
-          </p>
-
-          <form
-            action="/catalog"
-            className="mt-9 flex max-w-2xl flex-col gap-3 rounded-[8px] border border-white/12 bg-black/45 p-2 backdrop-blur sm:flex-row"
+        <form action="/catalog" className="mt-5 grid gap-2 md:grid-cols-[1fr_auto_auto]">
+          <label className="flex min-h-12 min-w-0 items-center gap-3 rounded-[8px] border border-black/12 bg-[#f6f6f4] px-4 focus-within:border-black/30">
+            <Search aria-hidden className="h-5 w-5 shrink-0 text-black/45" />
+            <span className="sr-only">Поиск</span>
+            <input
+              name="q"
+              className="min-w-0 flex-1 bg-transparent text-sm text-black outline-none placeholder:text-black/35"
+              placeholder="Бренд, вещь или размер"
+            />
+          </label>
+          <label className="flex min-h-12 items-center gap-2 rounded-[8px] border border-black/12 bg-[#f6f6f4] px-4 md:w-48">
+            <MapPin aria-hidden className="h-4 w-4 text-black/45" />
+            <span className="sr-only">Город</span>
+            <input
+              name="city"
+              className="min-w-0 flex-1 bg-transparent text-sm text-black outline-none placeholder:text-black/35"
+              placeholder="Город"
+            />
+          </label>
+          <button
+            type="submit"
+            className="min-h-12 rounded-[8px] bg-lime px-7 text-sm font-bold text-black transition hover:bg-[#bdea28]"
           >
-            <label className="flex min-h-12 flex-1 items-center gap-3 px-3">
-              <Search aria-hidden className="h-5 w-5 text-lime" />
-              <span className="sr-only">Поиск</span>
-              <input
-                name="q"
-                placeholder="Бренд, модель, размер..."
-                className="w-full bg-transparent text-sm text-cream outline-none placeholder:text-cream/42"
-              />
-            </label>
-            <button
-              type="submit"
-              className="inline-flex min-h-12 items-center justify-center gap-2 rounded-[8px] bg-lime px-5 text-sm font-bold text-black transition hover:bg-lime/90"
+            Найти
+          </button>
+        </form>
+
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {quickSearches.map((item) => (
+            <Link
+              key={item}
+              href={`/catalog?q=${encodeURIComponent(item)}`}
+              className="shrink-0 rounded-[8px] border border-black/10 bg-white px-3 py-2 text-sm font-semibold text-black/60 transition hover:bg-black/[0.04]"
             >
-              Найти
-              <ArrowRight aria-hidden className="h-4 w-4" />
-            </button>
-          </form>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            {quickSearches.map((item) => (
-              <Link
-                key={item}
-                href={`/catalog?q=${encodeURIComponent(item)}`}
-                className="rounded-[8px] border border-white/12 bg-black/30 px-3 py-2 text-xs font-semibold text-cream/72 backdrop-blur transition hover:border-lime/45 hover:text-lime"
-              >
-                {item}
-              </Link>
-            ))}
-          </div>
-
-          <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-            <LinkButton href="/catalog" size="lg">
-              Смотреть каталог
-            </LinkButton>
-            <LinkButton href="/sell" variant="secondary" size="lg">
-              Выложить вещь
-            </LinkButton>
-          </div>
+              {item}
+            </Link>
+          ))}
         </div>
       </div>
     </section>

@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --background: #050505;
-  --foreground: #f4f0e8;
+  --background: #f6f6f4;
+  --foreground: #111111;
 }
 
 @theme inline {
@@ -10,11 +10,13 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-manrope);
   --font-serif: var(--font-cormorant);
-  --color-night: #050505;
-  --color-charcoal: #111111;
-  --color-graphite: #1c1c1c;
-  --color-cream: #f4f0e8;
-  --color-lime: #d9ff43;
+  --color-night: #f6f6f4;
+  --color-charcoal: #ffffff;
+  --color-graphite: #ededed;
+  --color-cream: #111111;
+  --color-lime: #cfff3a;
+  --color-muted: #6b6b6b;
+  --color-line: rgba(0, 0, 0, 0.08);
 }
 
 * {
@@ -36,7 +38,7 @@ body {
 .page-shell {
   margin-inline: auto;
   width: 100%;
-  max-width: 80rem;
+  max-width: 86rem;
   padding-inline: 1rem;
 }
 
@@ -84,8 +86,21 @@ body {
 }
 
 .surface {
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  background: rgba(255, 255, 255, 0.045);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+}
+
+.market-card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  border-radius: 12px;
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {

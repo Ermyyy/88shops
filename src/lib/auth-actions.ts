@@ -3,24 +3,21 @@
 import "server-only";
 import {
   completeOnboardingAction as completeOnboardingActionImpl,
-  loginAction as loginActionImpl,
-  registerAction as registerActionImpl,
+  logoutAction as logoutActionImpl,
+  signInWithGoogleAction as signInWithGoogleActionImpl,
   skipOnboardingAction as skipOnboardingActionImpl,
 } from "@/lib/auth";
 import type { AuthActionState, OnboardingActionState } from "@/lib/auth-types";
 
-export async function registerAction(
-  prevState: AuthActionState,
+export async function signInWithGoogleAction(
+  _prevState: AuthActionState,
   formData: FormData,
 ): Promise<AuthActionState> {
-  return registerActionImpl(prevState, formData);
+  return signInWithGoogleActionImpl(formData);
 }
 
-export async function loginAction(
-  prevState: AuthActionState,
-  formData: FormData,
-): Promise<AuthActionState> {
-  return loginActionImpl(prevState, formData);
+export async function logoutAction() {
+  return logoutActionImpl();
 }
 
 export async function completeOnboardingAction(

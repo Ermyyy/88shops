@@ -55,7 +55,7 @@ export function IntroAnimation() {
           <div className="absolute inset-0 intro-droplets" />
           <div className="relative z-10 flex h-full flex-col items-center justify-center px-6">
             <motion.p
-              className="mb-4 text-xs font-semibold uppercase tracking-[0.32em] text-lime/80"
+              className="mb-4 text-xs font-semibold uppercase tracking-[0.32em] text-black/80"
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.25 }}
@@ -80,7 +80,7 @@ export function IntroAnimation() {
           <button
             type="button"
             onClick={skip}
-            className="absolute bottom-6 right-6 z-20 min-h-11 rounded-[8px] border border-white/12 px-4 text-sm font-semibold text-cream/70 transition hover:border-lime/60 hover:text-lime"
+            className="absolute bottom-6 right-6 z-20 min-h-11 rounded-[8px] border border-black/10 px-4 text-sm font-semibold text-cream/70 transition hover:border-black/20 hover:text-black"
           >
             Пропустить
           </button>

@@ -2,62 +2,62 @@ import Link from "next/link";
 
 const columns = [
   {
-    title: "Маркетплейс",
+    title: "Пользователям",
     links: [
       { href: "/catalog", label: "Каталог" },
-      { href: "/shops", label: "Магазины" },
-      { href: "/sell", label: "Продать вещь" },
       { href: "/favorites", label: "Избранное" },
-    ],
-  },
-  {
-    title: "Продукт",
-    links: [
-      { href: "/premium", label: "Premium" },
-      { href: "/legit-check", label: "Legit Check" },
-      { href: "/deals", label: "Сделки" },
+      { href: "/messages", label: "Сообщения" },
       { href: "/auth", label: "Аккаунт" },
     ],
   },
   {
-    title: "88Shops",
+    title: "Продавцам",
     links: [
-      { href: "/about", label: "О нас" },
-      { href: "/profile/alina.archive", label: "Профиль продавца" },
-      { href: "/shops/asphalt-archive", label: "Магазин Asphalt Archive" },
+      { href: "/sell", label: "Разместить объявление" },
+      { href: "/shops", label: "Магазины" },
+      { href: "/premium", label: "Продвижение" },
+      { href: "/profile/alina.archive", label: "Пример профиля" },
+    ],
+  },
+  {
+    title: "Безопасность",
+    links: [
+      { href: "/legit-check", label: "Legit Check" },
+      { href: "/deals", label: "Сделки" },
+      { href: "/about", label: "О сервисе" },
     ],
   },
 ];
 
 export function Footer() {
   return (
-    <footer className="border-t border-white/10 bg-black">
-      <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-12 sm:px-6 md:grid-cols-[1.4fr_2fr] lg:px-8">
+    <footer className="border-t border-black/10 bg-white">
+      <div className="page-shell grid gap-8 py-8 md:grid-cols-[1.2fr_2fr]">
         <div>
           <Link href="/" className="inline-flex items-center gap-2">
             <span className="flex h-9 w-9 items-center justify-center rounded-[8px] bg-lime text-sm font-black text-black">
               88
             </span>
-            <span className="text-lg font-semibold text-cream">88Shops</span>
+            <span className="text-lg font-semibold text-black">88Shops</span>
           </Link>
-          <p className="mt-5 max-w-sm text-sm leading-6 text-cream/52">
-            Fashion marketplace нового поколения: покупай, продавай и развивай
-            свой магазин без шума.
+          <p className="mt-4 max-w-sm text-sm leading-6 text-black/60">
+            Светлая витрина объявлений для одежды, обуви, аксессуаров и локальных
+            магазинов.
           </p>
-          <p className="mt-8 text-xs uppercase tracking-[0.2em] text-cream/36">
+          <p className="mt-6 text-xs text-black/45">
             Одежда, кроссовки и магазины в одном месте
           </p>
         </div>
-        <div className="grid gap-8 sm:grid-cols-3">
+        <div className="grid gap-6 sm:grid-cols-3">
           {columns.map((column) => (
             <div key={column.title}>
-              <h2 className="text-sm font-semibold text-cream">{column.title}</h2>
-              <ul className="mt-4 space-y-3">
+              <h2 className="text-sm font-semibold text-black">{column.title}</h2>
+              <ul className="mt-3 space-y-2">
                 {column.links.map((link) => (
                   <li key={link.href}>
                     <Link
                       href={link.href}
-                      className="text-sm text-cream/48 transition hover:text-lime"
+                      className="text-sm text-black/55 transition hover:text-black"
                     >
                       {link.label}
                     </Link>

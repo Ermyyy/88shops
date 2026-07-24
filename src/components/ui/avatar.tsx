@@ -1,4 +1,3 @@
-import { SafeImage } from "@/components/ui/safe-image";
 import { cn } from "@/lib/utils";
 
 type AvatarProps = {
@@ -17,29 +16,44 @@ const sizeClasses = {
 };
 
 const frameClasses = {
-  none: "ring-white/10",
-  graphite: "ring-graphite",
+  none: "ring-black/10",
+  graphite: "ring-black/18",
   lime: "ring-lime/80",
-  silver: "ring-cream/55",
+  silver: "ring-black/28",
 };
 
 export function Avatar({
-  src,
   name,
   size = "md",
   frame = "none",
   className,
 }: AvatarProps) {
+  const initials = getInitials(name);
+
   return (
     <div
       className={cn(
-        "relative shrink-0 overflow-hidden rounded-full bg-white/[0.06] ring-2",
+        "relative flex shrink-0 items-center justify-center overflow-hidden rounded-full bg-black/[0.04] text-sm font-bold uppercase text-black/45 ring-2",
         sizeClasses[size],
         frameClasses[frame],
+        size === "xl" && "text-2xl",
+        size === "sm" && "text-xs",
         className,
       )}
+      aria-label={name}
     >
-      <SafeImage src={src} alt={name} fill sizes="128px" className="object-cover" />
+      {initials}
     </div>
   );
+}
+
+function getInitials(name: string) {
+  const initials = name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("");
+
+  return initials || "88";
 }

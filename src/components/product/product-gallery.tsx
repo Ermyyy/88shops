@@ -11,9 +11,8 @@ export function ProductGallery({ images, title }: { images: ProductImage[]; titl
 
   return (
     <div className="space-y-3">
-      <div className="relative aspect-[4/5] overflow-hidden rounded-[8px] border border-white/10 bg-graphite">
+      <div className="relative aspect-[4/5] overflow-hidden rounded-[8px] border border-black/10 bg-[#eeeeee]">
         <SafeImage
-          src={active?.url}
           alt={active?.alt ?? title}
           fill
           priority
@@ -28,13 +27,12 @@ export function ProductGallery({ images, title }: { images: ProductImage[]; titl
             type="button"
             onClick={() => setActiveId(image.id)}
             className={cn(
-              "relative aspect-square overflow-hidden rounded-[8px] border border-white/10 bg-graphite transition",
+              "relative aspect-square overflow-hidden rounded-[8px] border border-black/10 bg-[#eeeeee] transition",
               active?.id === image.id && "border-lime",
             )}
             aria-label={`Открыть фото ${image.alt}`}
           >
             <SafeImage
-              src={image.url}
               alt={image.alt}
               fill
               sizes="120px"

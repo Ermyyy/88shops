@@ -1,30 +1,27 @@
 import Link from "next/link";
-import { ArrowUpRight } from "lucide-react";
+import { Shirt, ShoppingBag, Watch } from "lucide-react";
 import { CATEGORIES } from "@/lib/constants";
+
+const icons = [Shirt, Shirt, Shirt, Shirt, ShoppingBag, ShoppingBag, Watch];
 
 export function CategoryStrip() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-      {CATEGORIES.map((category, index) => (
-        <Link
-          key={category}
-          href={`/catalog?category=${encodeURIComponent(category)}`}
-          className="group min-h-36 rounded-[8px] border border-white/10 bg-white/[0.045] p-5 transition hover:border-lime/40 hover:bg-white/[0.07]"
-        >
-          <div className="flex items-start justify-between gap-4">
-            <span className="text-xs font-semibold uppercase tracking-[0.2em] text-cream/36">
-              0{index + 1}
+    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7">
+      {CATEGORIES.map((category, index) => {
+        const Icon = icons[index] ?? ShoppingBag;
+        return (
+          <Link
+            key={category}
+            href={`/catalog?category=${encodeURIComponent(category)}`}
+            className="flex min-h-16 items-center gap-3 rounded-[8px] border border-black/10 bg-white p-3 text-sm font-bold capitalize text-black transition hover:border-black/18 hover:bg-black/[0.03]"
+          >
+            <span className="grid h-9 w-9 shrink-0 place-items-center rounded-[8px] bg-lime/55">
+              <Icon aria-hidden className="h-4 w-4" />
             </span>
-            <ArrowUpRight
-              aria-hidden
-              className="h-5 w-5 text-cream/38 transition group-hover:text-lime"
-            />
-          </div>
-          <h3 className="mt-12 text-2xl font-semibold capitalize text-cream">
-            {category}
-          </h3>
-        </Link>
-      ))}
+            <span className="min-w-0 truncate">{category}</span>
+          </Link>
+        );
+      })}
     </div>
   );
 }

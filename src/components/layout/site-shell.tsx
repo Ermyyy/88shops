@@ -1,33 +1,38 @@
-import type { ReactNode } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Toaster } from "sonner";
 import { Footer } from "@/components/layout/footer";
+import { FlashToaster } from "@/components/layout/flash-toaster";
 import { Header } from "@/components/layout/header";
-import { IntroAnimation } from "@/components/intro/intro-animation";
 import { getCurrentUser } from "@/lib/auth";
 
 export async function SiteShell({ children }: { children: ReactNode }) {
   const user = await getCurrentUser();
-  const headerUser = user
+  const headerUser = user?.username
     ? {
         username: user.username,
-        displayName: `${user.firstName} ${user.lastName}`.trim() || user.username,
+        displayName:
+          user.name ?? (`${user.firstName ?? ""} ${user.lastName ?? ""}`.trim() || user.username),
       }
     : null;
 
   return (
     <>
-      <IntroAnimation />
       <Header user={headerUser} />
-      <main className="min-h-screen flex-1">{children}</main>
+      <main className="min-h-screen flex-1 pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
+        {children}
+      </main>
       <Footer />
+      <Suspense fallback={null}>
+        <FlashToaster />
+      </Suspense>
       <Toaster
-        theme="dark"
+        theme="light"
         position="bottom-right"
         toastOptions={{
           style: {
-            background: "#111111",
-            border: "1px solid rgba(255,255,255,0.12)",
-            color: "#F4F0E8",
+            background: "#ffffff",
+            border: "1px solid rgba(0,0,0,0.1)",
+            color: "#111111",
           },
         }}
       />

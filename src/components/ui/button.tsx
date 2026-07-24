@@ -4,24 +4,24 @@ import type { ComponentPropsWithoutRef, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-[8px] px-5 py-2.5 text-sm font-semibold transition duration-200 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime disabled:pointer-events-none disabled:opacity-45",
+  "inline-flex min-h-10 items-center justify-center gap-2 rounded-[10px] px-4 py-2 text-sm font-semibold transition duration-150 ease-out focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-lime disabled:pointer-events-none disabled:opacity-45",
   {
     variants: {
       variant: {
         primary:
-          "bg-lime text-black shadow-[0_0_0_1px_rgba(217,255,67,0.35)] hover:bg-lime/90",
+          "bg-lime text-black shadow-[0_0_0_1px_rgba(0,0,0,0.08)] hover:bg-[#bdea28]",
         secondary:
-          "border border-white/12 bg-white/[0.06] text-cream hover:border-lime/60 hover:bg-white/[0.09]",
-        ghost: "text-cream hover:bg-white/[0.07]",
-        dark: "border border-black/20 bg-black text-cream hover:bg-black/85",
+          "border border-black/10 bg-white text-cream hover:border-black/18 hover:bg-[#f1f1f1]",
+        ghost: "text-cream hover:bg-black/[0.04]",
+        dark: "border border-black/20 bg-black text-white hover:bg-black/85",
         danger:
-          "border border-red-400/30 bg-red-500/10 text-red-100 hover:bg-red-500/15",
+          "border border-red-200 bg-red-50 text-red-700 hover:bg-red-100",
       },
       size: {
-        sm: "min-h-10 px-4 text-xs",
-        md: "min-h-11 px-5 text-sm",
-        lg: "min-h-12 px-6 text-base",
-        icon: "h-11 w-11 px-0",
+        sm: "min-h-9 px-3 text-xs",
+        md: "min-h-10 px-4 text-sm",
+        lg: "min-h-11 px-5 text-sm",
+        icon: "h-10 w-10 px-0",
       },
     },
     defaultVariants: {

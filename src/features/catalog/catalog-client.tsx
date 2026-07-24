@@ -84,58 +84,58 @@ export function CatalogClient({
   const reset = () => setFilters(emptyFilters);
 
   return (
-    <div className="page-shell py-10">
-      <div className="mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between">
+    <div className="page-shell py-5">
+      <div className="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-lime">
-            Каталог
-          </p>
-          <h1 className="mt-3 font-serif text-5xl text-cream md:text-7xl">Каталог</h1>
-          <p className="mt-4 max-w-2xl text-sm leading-6 text-cream/58">
-            Новые вещи появляются каждый день.
+          <h1 className="text-2xl font-bold text-cream">Каталог</h1>
+          <p className="mt-1 text-sm text-black/55">
+            {filteredProducts.length} объявлений в 88Shops
           </p>
         </div>
-        <LinkButton href="/sell">Выложить вещь</LinkButton>
+        <LinkButton href="/sell" size="sm">
+          Разместить объявление
+        </LinkButton>
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-[18rem_1fr]">
-        <aside className="sticky top-24 hidden max-h-[calc(100vh-7rem)] overflow-y-auto rounded-[8px] border border-white/10 bg-white/[0.04] p-5 lg:block">
+      <div className="grid gap-5 lg:grid-cols-[17rem_1fr]">
+        <aside className="sticky top-20 hidden max-h-[calc(100vh-6rem)] overflow-y-auto rounded-[12px] border border-black/10 bg-white p-4 lg:block">
           <FilterPanel filters={filters} onChange={setFilters} onReset={reset} />
         </aside>
 
         <section>
-          <div className="mb-5 flex flex-col gap-3 rounded-[8px] border border-white/10 bg-white/[0.04] p-3 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
+          <div className="mb-4 flex items-center justify-between gap-3 rounded-[12px] border border-black/10 bg-white p-2.5">
+            <div className="flex min-w-0 items-center gap-2">
               <Button
                 type="button"
                 variant="secondary"
+                size="sm"
                 className="lg:hidden"
                 onClick={() => setFilterDrawerOpen(true)}
               >
                 <SlidersHorizontal aria-hidden className="h-4 w-4" />
                 Фильтры
               </Button>
-              <p className="text-sm text-cream/60">
-                Найдено: <span className="font-semibold text-cream">{filteredProducts.length}</span>
+              <p className="hidden text-sm text-black/55 sm:block">
+                Показано <span className="font-semibold text-cream">{filteredProducts.length}</span>
               </p>
             </div>
-            <label className="flex items-center gap-3 text-sm text-cream/55">
-              Сортировка
+            <label className="flex min-w-0 items-center gap-2 text-sm text-black/55">
+              <span className="hidden sm:inline">Сортировка</span>
               <Select
                 value={sort}
                 onChange={(event) => setSort(event.target.value as CatalogSort)}
-                className="min-w-56"
+                className="w-40 sm:w-52"
               >
                 <option value="new">Новые</option>
-                <option value="price-asc">Цена по возрастанию</option>
-                <option value="price-desc">Цена по убыванию</option>
+                <option value="price-asc">Сначала дешевле</option>
+                <option value="price-desc">Сначала дороже</option>
                 <option value="popular">Популярные</option>
               </Select>
             </label>
           </div>
 
           {filteredProducts.length > 0 ? (
-            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2.5 sm:gap-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {filteredProducts.map((product) => (
                 <ProductCard
                   key={product.id}
@@ -146,8 +146,8 @@ export function CatalogClient({
             </div>
           ) : (
             <EmptyState
-              title="Пока ничего не нашли"
-              description="Попробуй изменить фильтры или поискать по-другому."
+              title="Ничего не найдено"
+              description="Измени фильтры или попробуй другой запрос."
               action={
                 <Button type="button" variant="secondary" onClick={reset}>
                   Сбросить фильтры
@@ -160,7 +160,7 @@ export function CatalogClient({
 
       <Drawer
         open={filterDrawerOpen}
-        title="Фильтры каталога"
+        title="Фильтры"
         side="left"
         onClose={() => setFilterDrawerOpen(false)}
       >

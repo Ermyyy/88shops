@@ -42,47 +42,39 @@ export function FilterPanel({ filters, onChange, onReset }: FilterPanelProps) {
   };
 
   return (
-    <div className="space-y-5">
-      <div className="flex items-center justify-between gap-4">
-        <h2 className="text-lg font-semibold text-cream">Фильтры</h2>
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-base font-bold text-cream">Фильтры</h2>
         <Button type="button" variant="ghost" size="sm" onClick={onReset}>
           <RotateCcw aria-hidden className="h-4 w-4" />
           Сброс
         </Button>
       </div>
 
-      <label className="block space-y-2">
-        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-cream/42">
-          Поиск
-        </span>
+      <Field label="Поиск">
         <Input
           value={filters.query}
           onChange={(event) => update("query", event.target.value)}
-          placeholder="Что ищешь?"
+          placeholder="Бренд, модель, город"
         />
-      </label>
+      </Field>
 
-      <div className="grid gap-4">
-        <FilterSelect
-          label="Бренд"
-          value={filters.brand}
-          onChange={(value) => update("brand", value)}
-          options={BRANDS}
-        />
-        <FilterSelect
-          label="Категория"
-          value={filters.category}
-          onChange={(value) => update("category", value)}
-          options={CATEGORIES}
-          capitalize
-        />
-      </div>
+      <FilterSelect
+        label="Бренд"
+        value={filters.brand}
+        onChange={(value) => update("brand", value)}
+        options={BRANDS}
+      />
+      <FilterSelect
+        label="Категория"
+        value={filters.category}
+        onChange={(value) => update("category", value)}
+        options={CATEGORIES}
+        capitalize
+      />
 
-      <div className="grid grid-cols-2 gap-3">
-        <label className="block space-y-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-cream/42">
-            Цена от
-          </span>
+      <div className="grid grid-cols-2 gap-2">
+        <Field label="Цена от">
           <Input
             type="number"
             inputMode="numeric"
@@ -90,11 +82,8 @@ export function FilterPanel({ filters, onChange, onReset }: FilterPanelProps) {
             onChange={(event) => update("priceFrom", event.target.value)}
             placeholder="0"
           />
-        </label>
-        <label className="block space-y-2">
-          <span className="text-xs font-semibold uppercase tracking-[0.16em] text-cream/42">
-            Цена до
-          </span>
+        </Field>
+        <Field label="Цена до">
           <Input
             type="number"
             inputMode="numeric"
@@ -102,10 +91,10 @@ export function FilterPanel({ filters, onChange, onReset }: FilterPanelProps) {
             onChange={(event) => update("priceTo", event.target.value)}
             placeholder="100000"
           />
-        </label>
+        </Field>
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-2 gap-2">
         <FilterSelect
           label="Одежда"
           value={filters.clothingSize}
@@ -120,10 +109,7 @@ export function FilterPanel({ filters, onChange, onReset }: FilterPanelProps) {
         />
       </div>
 
-      <label className="block space-y-2">
-        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-cream/42">
-          Состояние
-        </span>
+      <Field label="Состояние">
         <Select
           value={filters.condition}
           onChange={(event) => update("condition", event.target.value)}
@@ -135,7 +121,7 @@ export function FilterPanel({ filters, onChange, onReset }: FilterPanelProps) {
             </option>
           ))}
         </Select>
-      </label>
+      </Field>
 
       <FilterSelect
         label="Город"
@@ -144,40 +130,43 @@ export function FilterPanel({ filters, onChange, onReset }: FilterPanelProps) {
         options={CITIES}
       />
 
-      <label className="block space-y-2">
-        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-cream/42">
-          Маркировка
-        </span>
+      <Field label="Тип">
         <Select
           value={filters.authenticityType}
           onChange={(event) => update("authenticityType", event.target.value)}
         >
-          <option value="">Любая</option>
+          <option value="">Любой</option>
           {Object.entries(AUTHENTICITY_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
               {label}
             </option>
           ))}
         </Select>
-      </label>
+      </Field>
 
-      <label className="block space-y-2">
-        <span className="text-xs font-semibold uppercase tracking-[0.16em] text-cream/42">
-          Способ сделки
-        </span>
+      <Field label="Сделка">
         <Select
           value={filters.dealMethod}
           onChange={(event) => update("dealMethod", event.target.value)}
         >
-          <option value="">Любой</option>
+          <option value="">Любой способ</option>
           {Object.entries(DEAL_METHOD_LABELS).map(([value, label]) => (
             <option key={value} value={value}>
               {label}
             </option>
           ))}
         </Select>
-      </label>
+      </Field>
     </div>
+  );
+}
+
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <label className="block">
+      <span className="mb-1.5 block text-sm font-semibold text-black/65">{label}</span>
+      {children}
+    </label>
   );
 }
 
@@ -195,10 +184,7 @@ function FilterSelect({
   capitalize?: boolean;
 }) {
   return (
-    <label className="block space-y-2">
-      <span className="text-xs font-semibold uppercase tracking-[0.16em] text-cream/42">
-        {label}
-      </span>
+    <Field label={label}>
       <Select value={value} onChange={(event) => onChange(event.target.value)}>
         <option value="">Любой</option>
         {options.map((option) => (
@@ -207,6 +193,6 @@ function FilterSelect({
           </option>
         ))}
       </Select>
-    </label>
+    </Field>
   );
 }

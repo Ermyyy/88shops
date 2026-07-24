@@ -4,9 +4,9 @@ import { LinkButton } from "@/components/ui/button";
 export function SellerCta() {
   return (
     <section className="page-shell py-16">
-      <div className="grid gap-8 rounded-[8px] border border-white/10 bg-lime p-8 text-black md:grid-cols-[1fr_auto] md:items-center lg:p-10">
+      <div className="grid gap-8 rounded-[8px] border border-black/10 bg-lime p-8 text-black md:grid-cols-[1fr_auto] md:items-center lg:p-10">
         <div>
-          <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-[0.22em]">
+          <p className="inline-flex items-center gap-2 text-xs font-black uppercase tracking-normal">
             <Store aria-hidden className="h-4 w-4" />
             Для продавцов
           </p>

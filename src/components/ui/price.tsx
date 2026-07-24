@@ -6,5 +6,5 @@ type PriceProps = {
 };
 
 export function Price({ value, className }: PriceProps) {
-  return <span className={cn("font-semibold text-cream", className)}>{formatPrice(value)}</span>;
+  return <span className={cn("font-bold text-cream", className)}>{formatPrice(value)}</span>;
 }

@@ -32,9 +32,9 @@ export function BenefitsGrid() {
         return (
           <article
             key={benefit.title}
-            className="rounded-[8px] border border-white/10 bg-white/[0.045] p-5"
+            className="rounded-[8px] border border-black/10 bg-white p-5"
           >
-            <span className="inline-flex h-11 w-11 items-center justify-center rounded-[8px] bg-lime/12 text-lime">
+            <span className="inline-flex h-11 w-11 items-center justify-center rounded-[8px] bg-lime/12 text-black">
               <Icon aria-hidden className="h-5 w-5" />
             </span>
             <h3 className="mt-5 text-lg font-semibold text-cream">{benefit.title}</h3>

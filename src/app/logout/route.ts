@@ -1,7 +1,5 @@
-import { NextRequest, NextResponse } from "next/server";
-import { clearSession } from "@/lib/auth";
+import { logoutAction } from "@/lib/auth-actions";
 
-export async function POST(request: NextRequest) {
-  await clearSession();
-  return NextResponse.redirect(new URL("/auth", request.url), { status: 303 });
+export async function POST() {
+  await logoutAction();
 }

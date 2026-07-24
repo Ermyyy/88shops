@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { SESSION_COOKIE } from "@/lib/auth-constants";
 
 const PUBLIC_PREFIXES = ["/auth", "/catalog", "/product", "/shops", "/about"];
+const AUTH_COOKIE_NAMES = [
+  "authjs.session-token",
+  "__Secure-authjs.session-token",
+  "next-auth.session-token",
+  "__Secure-next-auth.session-token",
+];
 
 function isPublicPath(pathname: string) {
   return PUBLIC_PREFIXES.some((path) => pathname === path || pathname.startsWith(`${path}/`));
@@ -9,6 +14,14 @@ function isPublicPath(pathname: string) {
 
 function isSafeCallback(pathname: string) {
   return pathname.startsWith("/") && !pathname.startsWith("//");
+}
+
+function hasAuthSessionCookie(request: NextRequest) {
+  return request.cookies
+    .getAll()
+    .some((cookie) =>
+      AUTH_COOKIE_NAMES.some((name) => cookie.name === name || cookie.name.startsWith(`${name}.`)),
+    );
 }
 
 export function middleware(request: NextRequest) {
@@ -23,9 +36,7 @@ export function middleware(request: NextRequest) {
     return NextResponse.next();
   }
 
-  const session = request.cookies.get(SESSION_COOKIE)?.value;
-
-  if (!session) {
+  if (!hasAuthSessionCookie(request)) {
     const callback = isSafeCallback(`${pathname}${search}`) ? `${pathname}${search}` : "/";
     const url = request.nextUrl.clone();
     url.pathname = "/auth";

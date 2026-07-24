@@ -58,41 +58,44 @@ export default async function DealPage({ params }: DealPageProps) {
   const currentIndex = DEAL_STATUSES.indexOf(deal.status);
 
   return (
-    <div className="page-shell py-10">
+    <div className="page-shell py-6 md:py-8">
       <Link
         href="/deals"
-        className="mb-6 inline-flex items-center gap-2 text-sm font-semibold text-cream/55 transition hover:text-lime"
+        className="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-black/55 transition hover:text-black"
       >
         <ArrowLeft aria-hidden className="h-4 w-4" />
         Все сделки
       </Link>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_24rem]">
-        <section className="space-y-6">
-          <div className="rounded-[8px] border border-white/10 bg-white/[0.045] p-6">
-            <div className="mb-5 flex flex-wrap items-center gap-2">
+      <div className="grid gap-5 lg:grid-cols-[1fr_23rem]">
+        <section className="space-y-4">
+          <div className="rounded-[8px] border border-black/10 bg-white p-4">
+            <div className="mb-3 flex flex-wrap items-center gap-2">
               <StatusBadge status={deal.status} />
               <Badge>{DEAL_METHOD_LABELS[deal.method]}</Badge>
               {deal.method === "SAFE_DEAL" ? <Badge variant="warning">Скоро</Badge> : null}
             </div>
-            <h1 className="font-serif text-5xl text-cream md:text-7xl">
+            <h1 className="text-2xl font-semibold text-black md:text-3xl">
               Сделка {deal.id}
             </h1>
-            <p className="mt-4 text-sm leading-6 text-cream/58">
-              Создана {formatDate(deal.createdAt)}. Готовим защищённый сценарий оплаты и доставки.
+            <p className="mt-2 text-sm leading-6 text-black/58">
+              Создана {formatDate(deal.createdAt)}. Оплата и доставка через
+              безопасную сделку пока не подключены.
             </p>
           </div>
 
-          <div className="rounded-[8px] border border-amber-300/25 bg-amber-300/10 p-5 text-sm leading-6 text-amber-50/75">
+          <div className="rounded-[8px] border border-amber-300/45 bg-amber-50 p-4 text-sm leading-6 text-black/65">
             <div className="flex items-start gap-3">
-              <ShieldAlert aria-hidden className="mt-1 h-5 w-5 shrink-0 text-amber-200" />
-              <p>Оплата через безопасную сделку появится после подключения сервиса.</p>
+              <ShieldAlert aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
+              <p>
+                Оплата через безопасную сделку появится после подключения сервиса.
+              </p>
             </div>
           </div>
 
-          <div className="rounded-[8px] border border-white/10 bg-white/[0.045] p-6">
-            <h2 className="mb-5 text-2xl font-semibold text-cream">Статус</h2>
-            <div className="grid gap-3">
+          <div className="rounded-[8px] border border-black/10 bg-white p-4">
+            <h2 className="mb-4 text-lg font-semibold text-black">Статус</h2>
+            <div className="grid gap-2">
               {DEAL_STATUSES.map((status, index) => (
                 <TimelineRow
                   key={status}
@@ -104,39 +107,38 @@ export default async function DealPage({ params }: DealPageProps) {
             </div>
           </div>
 
-          <div className="grid gap-5 md:grid-cols-2">
-            <Participant title="Покупатель" name={buyer?.displayName} avatar={buyer?.avatarUrl} />
-            <Participant title="Продавец" name={seller?.displayName} avatar={seller?.avatarUrl} />
+          <div className="grid gap-3 md:grid-cols-2">
+            <Participant title="Покупатель" name={buyer?.displayName} />
+            <Participant title="Продавец" name={seller?.displayName} />
           </div>
         </section>
 
-        <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
-          <div className="rounded-[8px] border border-white/10 bg-white/[0.045] p-5">
-            <div className="relative mb-4 aspect-[4/5] overflow-hidden rounded-[8px] bg-graphite">
+        <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+          <div className="rounded-[8px] border border-black/10 bg-white p-4">
+            <div className="relative mb-4 aspect-[4/5] overflow-hidden rounded-[8px] bg-[#eeeeee]">
               <SafeImage
-                src={product?.images[0]?.url}
                 alt={product?.title ?? "Товар"}
                 fill
                 sizes="380px"
                 className="object-cover"
               />
             </div>
-            <h2 className="text-xl font-semibold text-cream">
-              {product?.title ?? "Товар удалён"}
+            <h2 className="text-lg font-semibold text-black">
+              {product?.title ?? "Товар удален"}
             </h2>
-            <dl className="mt-5 space-y-3 text-sm">
+            <dl className="mt-4 space-y-3 text-sm">
               <Row label="Цена" value={<Price value={deal.amountKopecks} />} />
               <Row label="Способ" value={DEAL_METHOD_LABELS[deal.method]} />
               <Row label="Статус" value={<StatusBadge status={deal.status} />} />
             </dl>
           </div>
 
-          <div className="rounded-[8px] border border-white/10 bg-white/[0.045] p-5">
-            <h2 className="font-semibold text-cream">Действия</h2>
-            <p className="mt-2 text-sm leading-6 text-cream/55">
-              Безопасная сделка скоро появится. Пока кнопки оплаты выключены.
+          <div className="rounded-[8px] border border-black/10 bg-white p-4">
+            <h2 className="font-semibold text-black">Действия</h2>
+            <p className="mt-2 text-sm leading-6 text-black/55">
+              Кнопки оплаты выключены до подключения безопасной сделки.
             </p>
-            <div className="mt-4 grid gap-3">
+            <div className="mt-4 grid gap-2">
               <Button type="button" disabled>
                 Оплата скоро
               </Button>
@@ -161,12 +163,14 @@ function TimelineRow({
   current: boolean;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-[8px] border border-white/10 bg-black/18 p-3">
+    <div className="flex items-center gap-3 rounded-[8px] border border-black/10 bg-[#f6f6f4] p-3">
       <span
-        className={`h-3 w-3 rounded-full ${active ? "bg-lime" : "bg-white/18"}`}
+        className={`h-3 w-3 rounded-full ${active ? "bg-lime" : "bg-black/12"}`}
         aria-hidden
       />
-      <span className="flex-1 text-sm font-semibold text-cream/70">{statusLabels[status]}</span>
+      <span className="flex-1 text-sm font-semibold text-black/70">
+        {statusLabels[status]}
+      </span>
       {current ? <StatusBadge status={status} /> : null}
     </div>
   );
@@ -175,20 +179,16 @@ function TimelineRow({
 function Participant({
   title,
   name,
-  avatar,
 }: {
   title: string;
   name?: string;
-  avatar?: string;
 }) {
   return (
-    <div className="flex items-center gap-4 rounded-[8px] border border-white/10 bg-white/[0.045] p-5">
-      <Avatar src={avatar} name={name ?? title} />
+    <div className="flex items-center gap-3 rounded-[8px] border border-black/10 bg-white p-4">
+      <Avatar name={name ?? title} />
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-cream/38">
-          {title}
-        </p>
-        <p className="mt-1 font-semibold text-cream">{name ?? "Участник"}</p>
+        <p className="text-xs font-semibold text-black/42">{title}</p>
+        <p className="mt-1 font-semibold text-black">{name ?? "Участник"}</p>
       </div>
     </div>
   );
@@ -196,9 +196,9 @@ function Participant({
 
 function Row({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-4 border-t border-white/10 pt-3">
-      <dt className="text-cream/45">{label}</dt>
-      <dd className="text-right font-semibold text-cream">{value}</dd>
+    <div className="flex items-center justify-between gap-4 border-t border-black/10 pt-3">
+      <dt className="text-black/45">{label}</dt>
+      <dd className="text-right font-semibold text-black">{value}</dd>
     </div>
   );
 }

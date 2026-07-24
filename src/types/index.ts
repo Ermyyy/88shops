@@ -26,7 +26,7 @@ export type UserRole = "USER" | "SELLER" | "SHOP_OWNER" | "ADMIN";
 
 export type ProductImage = {
   id: string;
-  url: string;
+  url?: string;
   alt: string;
 };
 
@@ -66,8 +66,8 @@ export type Shop = {
   ownerId: string;
   name: string;
   slug: string;
-  avatarUrl: string;
-  coverUrl: string;
+  avatarUrl?: string;
+  coverUrl?: string;
   description: string;
   rating: number;
   reviewsCount: number;

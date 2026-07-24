@@ -15,24 +15,26 @@ export const metadata: Metadata = {
 
 export default function DealsPage() {
   return (
-    <div className="page-shell py-10">
-      <div className="mb-8">
+    <div className="page-shell py-6 md:py-8">
+      <div className="mb-5">
         <Badge variant="warning">Скоро</Badge>
-        <h1 className="mt-5 font-serif text-5xl text-cream md:text-7xl">Сделки</h1>
-        <p className="mt-4 max-w-2xl text-sm leading-6 text-cream/58">
-          Готовим защищённый сценарий оплаты и доставки. Пока можно использовать
-          личную встречу или договориться напрямую.
+        <h1 className="mt-3 text-2xl font-semibold text-black md:text-3xl">
+          Сделки
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm leading-6 text-black/58">
+          Защищенную оплату и доставку подключим отдельно. Сейчас раздел показывает
+          будущую структуру сделок без имитации работающей оплаты.
         </p>
       </div>
 
-      <div className="mb-6 rounded-[8px] border border-amber-300/25 bg-amber-300/10 p-5 text-sm leading-6 text-amber-50/75">
+      <div className="mb-4 rounded-[8px] border border-amber-300/45 bg-amber-50 p-4 text-sm leading-6 text-black/65">
         <div className="flex items-start gap-3">
-          <ShieldAlert aria-hidden className="mt-1 h-5 w-5 shrink-0 text-amber-200" />
+          <ShieldAlert aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-amber-700" />
           <p>Безопасная сделка появится после подключения оплаты и доставки.</p>
         </div>
       </div>
 
-      <div className="grid gap-4">
+      <div className="grid gap-3">
         {deals.map((deal) => {
           const product = getProductById(deal.productId);
           const buyer = getUserById(deal.buyerId);
@@ -42,24 +44,24 @@ export default function DealsPage() {
             <Link
               key={deal.id}
               href={`/deals/${deal.id}`}
-              className="grid gap-4 rounded-[8px] border border-white/10 bg-white/[0.045] p-5 transition hover:border-lime/35 md:grid-cols-[1fr_auto]"
+              className="grid gap-3 rounded-[8px] border border-black/10 bg-white p-4 transition hover:border-black/20 md:grid-cols-[1fr_auto]"
             >
               <div>
-                <div className="mb-3 flex flex-wrap items-center gap-2">
+                <div className="mb-2 flex flex-wrap items-center gap-2">
                   <StatusBadge status={deal.status} />
                   <Badge>{DEAL_METHOD_LABELS[deal.method]}</Badge>
                 </div>
-                <h2 className="text-xl font-semibold text-cream">
-                  {product?.title ?? "Товар удалён"}
+                <h2 className="text-base font-semibold text-black">
+                  {product?.title ?? "Товар удален"}
                 </h2>
-                <p className="mt-2 text-sm text-cream/52">
+                <p className="mt-1 text-sm text-black/55">
                   Покупатель: {buyer?.displayName ?? "Покупатель"} · Продавец:{" "}
                   {seller?.displayName ?? "Продавец"} · {formatDate(deal.createdAt)}
                 </p>
               </div>
               <div className="flex items-center justify-between gap-6 md:justify-end">
                 <Price value={deal.amountKopecks} className="text-xl" />
-                <ArrowUpRight aria-hidden className="h-5 w-5 text-lime" />
+                <ArrowUpRight aria-hidden className="h-5 w-5 text-black/45" />
               </div>
             </Link>
           );

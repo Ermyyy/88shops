@@ -59,38 +59,40 @@ export function LegitCheckForm() {
         shouldValidate: true,
         shouldDirty: true,
       }),
-    onDropRejected: () => toast("Фото не подходит: нужен JPEG, PNG или WebP до 6 МБ."),
+    onDropRejected: () =>
+      toast("Фото не подходит: нужен JPEG, PNG или WebP до 6 МБ."),
   });
 
   return (
     <form
       onSubmit={(event) => event.preventDefault()}
-      className="grid gap-6 lg:grid-cols-[1fr_22rem]"
+      className="grid gap-5 lg:grid-cols-[1fr_22rem]"
     >
-      <section className="rounded-[8px] border border-white/10 bg-white/[0.045] p-5">
-        <h2 className="mb-5 text-2xl font-semibold text-cream">Материалы</h2>
+      <section className="rounded-[8px] border border-black/10 bg-white p-4">
+        <h2 className="mb-4 text-lg font-semibold text-black">Материалы</h2>
         <div
           {...getRootProps()}
-          className="flex min-h-56 cursor-pointer flex-col items-center justify-center rounded-[8px] border border-dashed border-white/18 bg-black/24 p-6 text-center transition hover:border-lime/50"
+          className="flex min-h-48 cursor-pointer flex-col items-center justify-center rounded-[8px] border border-dashed border-black/18 bg-[#f6f6f4] p-5 text-center transition hover:border-black/30"
         >
           <input {...getInputProps()} />
-          <UploadCloud aria-hidden className="h-10 w-10 text-lime" />
-          <p className="mt-4 font-semibold text-cream">
-            {isDragActive ? "Отпустите изображения" : "Добавьте фото вещи и деталей"}
+          <UploadCloud aria-hidden className="h-9 w-9 text-black/70" />
+          <p className="mt-3 font-semibold text-black">
+            {isDragActive ? "Отпусти изображения" : "Добавь фото вещи и деталей"}
           </p>
-          <p className="mt-2 max-w-md text-sm leading-6 text-cream/50">
-            Бирки, швы, фурнитура, подошва, коробка. Первые фото помогут быстрее разобраться в вещи.
+          <p className="mt-2 max-w-md text-sm leading-6 text-black/50">
+            Бирки, швы, фурнитура, подошва, коробка. Первые фото помогут быстрее
+            разобраться в вещи.
           </p>
         </div>
         {errors.images ? (
-          <p className="mt-3 text-sm text-red-200">{errors.images.message}</p>
+          <p className="mt-3 text-sm text-red-600">{errors.images.message}</p>
         ) : null}
         {previews.length > 0 ? (
           <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
             {previews.map((preview) => (
               <div
                 key={preview.url}
-                className="relative aspect-square overflow-hidden rounded-[8px] border border-white/10"
+                className="relative aspect-square overflow-hidden rounded-[8px] border border-black/10 bg-[#eeeeee]"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={preview.url} alt={preview.name} className="h-full w-full object-cover" />
@@ -103,7 +105,7 @@ export function LegitCheckForm() {
                       { shouldValidate: true },
                     )
                   }
-                  className="absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-[8px] bg-black/70 text-cream hover:text-lime"
+                  className="absolute right-2 top-2 grid h-9 w-9 place-items-center rounded-[8px] border border-black/10 bg-white/90 text-black shadow-sm transition hover:bg-lime"
                   aria-label="Удалить фото"
                 >
                   <Trash2 aria-hidden className="h-4 w-4" />
@@ -114,12 +116,13 @@ export function LegitCheckForm() {
         ) : null}
       </section>
 
-      <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
-        <div className="rounded-[8px] border border-white/10 bg-white/[0.045] p-5">
-          <ShieldQuestion aria-hidden className="h-7 w-7 text-lime" />
-          <h2 className="mt-4 text-2xl font-semibold text-cream">Готовим запуск</h2>
-          <p className="mt-3 text-sm leading-6 text-cream/58">
-            Проверка вещи появится позже. Пока можно подготовить фото, бренд, модель и комментарий.
+      <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+        <div className="rounded-[8px] border border-black/10 bg-white p-4">
+          <ShieldQuestion aria-hidden className="h-7 w-7 text-black" />
+          <h2 className="mt-3 text-lg font-semibold text-black">Готовим запуск</h2>
+          <p className="mt-2 text-sm leading-6 text-black/58">
+            Проверка вещи появится позже. Пока можно подготовить фото, бренд,
+            модель и комментарий.
           </p>
         </div>
         <Field label="Бренд" error={errors.brand?.message}>
@@ -138,7 +141,7 @@ export function LegitCheckForm() {
           <textarea
             {...register("comment")}
             rows={5}
-            className="w-full rounded-[8px] border border-white/10 bg-white/[0.055] px-4 py-3 text-sm text-cream outline-none focus:border-lime/70"
+            className="w-full rounded-[8px] border border-black/10 bg-white px-4 py-3 text-sm text-black outline-none focus:border-black/40"
             placeholder="Что смущает, какие документы есть, где покупали..."
           />
         </Field>
@@ -161,11 +164,11 @@ function Field({
 }) {
   return (
     <label className="block">
-      <span className="mb-2 block text-xs font-semibold uppercase tracking-[0.16em] text-cream/42">
+      <span className="mb-2 block text-xs font-semibold text-black/45">
         {label}
       </span>
       {children}
-      {error ? <span className="mt-2 block text-sm text-red-200">{error}</span> : null}
+      {error ? <span className="mt-2 block text-sm text-red-600">{error}</span> : null}
     </label>
   );
 }

@@ -41,35 +41,18 @@ export const sellFormSchema = z
     path: ["clothingSize"],
   });
 
-export const authFormSchema = z.object({
-  firstName: z.string().min(2, "Введите имя"),
-  lastName: z.string().min(2, "Введите фамилию"),
+export const onboardingProfileSchema = z.object({
   username: z
     .string()
+    .trim()
+    .toLowerCase()
     .min(3, "Минимум 3 символа")
-    .regex(/^[a-zA-Z0-9_]+$/, "Только латиница, цифры и _"),
-  email: z.string().email("Проверь email"),
-  password: z.string().min(8, "Пароль должен содержать минимум 8 символов"),
-  confirmPassword: z.string().min(8, "Повторите пароль"),
+    .max(24, "Максимум 24 символа")
+    .regex(/^[a-z0-9_.]+$/, "Только латиница, цифры, _ и ."),
+  city: z.string().trim().max(80, "Слишком длинный город").optional(),
+  avatar: z.string().trim().url("Проверь ссылку на аватар").or(z.literal("")).optional(),
+  bio: z.string().trim().max(220, "Коротко, до 220 символов").optional(),
   intent: z.enum(["BUY", "SELL", "BOTH"]),
-  accepted: z.boolean().refine(Boolean, "Нужно принять правила сервиса"),
-}).refine((value) => value.password === value.confirmPassword, {
-  message: "Пароли не совпадают",
-  path: ["confirmPassword"],
-});
-
-export const loginFormSchema = z.object({
-  identifier: z.string().min(1, "Введите email или ник"),
-  password: z.string().min(1, "Введите пароль"),
-});
-
-export const onboardingProfileSchema = z.object({
-  avatar: z.string().optional(),
-  cover: z.string().optional(),
-  city: z.enum(CITIES),
-  bio: z.string().max(220, "Коротко, до 220 символов").optional(),
-  categories: z.array(z.enum(["одежда", "кроссовки", "аксессуары"])).min(1, "Выберите интересы"),
-  authenticityPreference: z.enum(["ORIGINAL", "REPLICA", "BOTH"]),
 });
 
 export const onboardingInterestsSchema = z.object({
@@ -88,8 +71,6 @@ export const legitCheckSchema = z.object({
 });
 
 export type SellFormValues = z.infer<typeof sellFormSchema>;
-export type AuthFormValues = z.infer<typeof authFormSchema>;
-export type LoginFormValues = z.infer<typeof loginFormSchema>;
 export type OnboardingProfileValues = z.infer<typeof onboardingProfileSchema>;
 export type OnboardingInterestsValues = z.infer<typeof onboardingInterestsSchema>;
 export type LegitCheckValues = z.infer<typeof legitCheckSchema>;

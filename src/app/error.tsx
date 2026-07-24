@@ -1,32 +1,36 @@
 "use client";
 
+import { useEffect } from "react";
 import { RotateCcw } from "lucide-react";
 import { Button, LinkButton } from "@/components/ui/button";
 
 export default function ErrorPage({
+  error,
   reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  useEffect(() => {
+    console.error("[app]", error.name, error.digest);
+  }, [error]);
+
   return (
     <div className="page-shell flex min-h-[70vh] items-center justify-center py-10">
-      <section className="max-w-xl rounded-[8px] border border-white/10 bg-white/[0.045] p-8 text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.22em] text-lime">
-          Ошибка
+      <section className="max-w-xl rounded-[8px] border border-black/10 bg-white p-6 text-center">
+        <h1 className="text-2xl font-semibold text-black">
+          Не получилось загрузить страницу
+        </h1>
+        <p className="mt-3 text-sm leading-6 text-black/58">
+          Попробуй еще раз или вернись в каталог.
         </p>
-        <h1 className="mt-4 font-serif text-5xl text-cream">Что-то пошло не так</h1>
-        <p className="mt-4 text-sm leading-6 text-cream/58">
-          Мы не показываем stack trace пользователю. Попробуйте перезагрузить
-          интерфейс или вернуться на главную.
-        </p>
-        <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+        <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
           <Button type="button" onClick={reset}>
             <RotateCcw aria-hidden className="h-4 w-4" />
-            Повторить
+            Попробовать снова
           </Button>
-          <LinkButton href="/" variant="secondary">
-            На главную
+          <LinkButton href="/catalog" variant="secondary">
+            В каталог
           </LinkButton>
         </div>
       </section>

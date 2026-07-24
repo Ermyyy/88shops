@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Price } from "@/components/ui/price";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { DEAL_METHOD_LABELS } from "@/lib/constants";
-import { deals, getProductById, getUserById } from "@/lib/mock-data";
+import { getDeals } from "@/lib/market-data";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = {
@@ -13,7 +13,11 @@ export const metadata: Metadata = {
   description: "Раздел сделок 88Shops.",
 };
 
-export default function DealsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function DealsPage() {
+  const deals = await getDeals();
+
   return (
     <div className="page-shell py-6 md:py-8">
       <div className="mb-5">
@@ -35,11 +39,7 @@ export default function DealsPage() {
       </div>
 
       <div className="grid gap-3">
-        {deals.map((deal) => {
-          const product = getProductById(deal.productId);
-          const buyer = getUserById(deal.buyerId);
-          const seller = getUserById(deal.sellerId);
-
+        {deals.map(({ deal, productTitle, buyerName, sellerName }) => {
           return (
             <Link
               key={deal.id}
@@ -52,11 +52,10 @@ export default function DealsPage() {
                   <Badge>{DEAL_METHOD_LABELS[deal.method]}</Badge>
                 </div>
                 <h2 className="text-base font-semibold text-black">
-                  {product?.title ?? "Товар удален"}
+                  {productTitle}
                 </h2>
                 <p className="mt-1 text-sm text-black/55">
-                  Покупатель: {buyer?.displayName ?? "Покупатель"} · Продавец:{" "}
-                  {seller?.displayName ?? "Продавец"} · {formatDate(deal.createdAt)}
+                  Покупатель: {buyerName} · Продавец: {sellerName} · {formatDate(deal.createdAt)}
                 </p>
               </div>
               <div className="flex items-center justify-between gap-6 md:justify-end">

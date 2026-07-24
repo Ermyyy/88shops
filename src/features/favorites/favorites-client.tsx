@@ -3,14 +3,10 @@
 import { LinkButton } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProductCard } from "@/components/ui/product-card";
-import { useFavoritesStore } from "@/store/favorites-store";
 import type { Product } from "@/types";
 
 export function FavoritesClient({ products }: { products: Product[] }) {
-  const favoriteIds = useFavoritesStore((state) => state.favoriteIds);
-  const favoriteProducts = products.filter((product) => favoriteIds.includes(product.id));
-
-  if (favoriteProducts.length === 0) {
+  if (products.length === 0) {
     return (
       <EmptyState
         title="Здесь будут объявления, которые ты сохранил"
@@ -22,7 +18,7 @@ export function FavoritesClient({ products }: { products: Product[] }) {
 
   return (
     <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 2xl:grid-cols-5">
-      {favoriteProducts.map((product) => (
+      {products.map((product) => (
         <ProductCard key={product.id} product={product} />
       ))}
     </div>

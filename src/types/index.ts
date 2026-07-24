@@ -97,6 +97,17 @@ export type Product = {
   images: ProductImage[];
   popularityScore: number;
   createdAt: string;
+  seller?: SellerSummary;
+};
+
+export type SellerSummary = {
+  id: string;
+  name: string;
+  href: string;
+  verified: boolean;
+  rating: number;
+  reviewsCount: number;
+  salesCount: number;
 };
 
 export type Review = {

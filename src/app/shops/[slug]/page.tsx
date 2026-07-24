@@ -9,13 +9,7 @@ import { ProductCard } from "@/components/ui/product-card";
 import { Rating } from "@/components/ui/rating";
 import { SafeImage } from "@/components/ui/safe-image";
 import { Tabs } from "@/components/ui/tabs";
-import {
-  getProductsByShop,
-  getReviewsForShop,
-  getShopBySlug,
-  getUserById,
-  shops,
-} from "@/lib/mock-data";
+import { getShopPageData } from "@/lib/market-data";
 import { hasSessionCookie } from "@/lib/auth";
 import { formatDate } from "@/lib/utils";
 
@@ -23,13 +17,12 @@ type ShopPageProps = {
   params: Promise<{ slug: string }>;
 };
 
-export function generateStaticParams() {
-  return shops.map((shop) => ({ slug: shop.slug }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: ShopPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const shop = getShopBySlug(slug);
+  const data = await getShopPageData(slug);
+  const shop = data?.shop;
 
   if (!shop) {
     return { title: "Магазин не найден" };
@@ -47,14 +40,13 @@ export async function generateMetadata({ params }: ShopPageProps): Promise<Metad
 
 export default async function ShopPage({ params }: ShopPageProps) {
   const { slug } = await params;
-  const shop = getShopBySlug(slug);
+  const data = await getShopPageData(slug);
 
-  if (!shop) {
+  if (!data) {
     notFound();
   }
 
-  const products = getProductsByShop(shop.id);
-  const reviews = getReviewsForShop(shop.id);
+  const { shop, products, reviews } = data;
   const isAuthenticated = await hasSessionCookie();
 
   return (
@@ -145,8 +137,6 @@ export default async function ShopPage({ params }: ShopPageProps) {
             content: (
               <div className="grid gap-3 md:grid-cols-2">
                 {reviews.map((review) => {
-                  const author = getUserById(review.authorId);
-
                   return (
                     <article
                       key={review.id}
@@ -154,11 +144,11 @@ export default async function ShopPage({ params }: ShopPageProps) {
                     >
                       <div className="mb-3 flex items-center gap-3">
                         <Avatar
-                          name={author?.displayName ?? "Покупатель"}
+                          name={review.authorName ?? "Покупатель"}
                         />
                         <div>
                           <p className="font-semibold text-black">
-                            {author?.displayName ?? "Покупатель"}
+                            {review.authorName ?? "Покупатель"}
                           </p>
                           <Rating value={review.rating} />
                         </div>

@@ -4,17 +4,9 @@ import "server-only";
 import {
   completeOnboardingAction as completeOnboardingActionImpl,
   logoutAction as logoutActionImpl,
-  signInWithGoogleAction as signInWithGoogleActionImpl,
   skipOnboardingAction as skipOnboardingActionImpl,
 } from "@/lib/auth";
-import type { AuthActionState, OnboardingActionState } from "@/lib/auth-types";
-
-export async function signInWithGoogleAction(
-  _prevState: AuthActionState,
-  formData: FormData,
-): Promise<AuthActionState> {
-  return signInWithGoogleActionImpl(formData);
-}
+import type { OnboardingActionState } from "@/lib/auth-types";
 
 export async function logoutAction() {
   return logoutActionImpl();

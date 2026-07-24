@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
 import { ShopsDirectory } from "@/components/shops/shops-directory";
-import { shops } from "@/lib/mock-data";
+import { getShops } from "@/lib/market-data";
 
 export const metadata: Metadata = {
   title: "Магазины",
   description: "Магазины и продавцы 88Shops с собственным каталогом.",
 };
 
-export default function ShopsPage() {
+export const dynamic = "force-dynamic";
+
+export default async function ShopsPage() {
+  const shops = await getShops();
+
   return (
     <div className="page-shell py-6 md:py-8">
       <div className="mb-5">

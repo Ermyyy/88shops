@@ -5,7 +5,7 @@ import { getCurrentUser, getSafeCallbackUrl } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Войти в 88Shops",
-  description: "Вход в 88Shops через Telegram или Google.",
+  description: "Вход в 88Shops через Telegram.",
 };
 
 type AuthPageProps = {
@@ -43,12 +43,8 @@ function getAuthError(value: string | undefined) {
     return undefined;
   }
 
-  if (
-    ["OAuthAccountNotLinked", "AccessDenied", "Configuration", "CallbackRouteError"].includes(
-      value,
-    )
-  ) {
-    return "Не получилось войти через Google. Попробуй еще раз.";
+  if (["AccessDenied", "Configuration", "CallbackRouteError"].includes(value)) {
+    return "Не получилось войти через Telegram. Проверь настройки бота и попробуй еще раз.";
   }
 
   return "Не получилось войти. Попробуй еще раз.";

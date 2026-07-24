@@ -1,10 +1,10 @@
 import "server-only";
 
 import { redirect } from "next/navigation";
-import { signIn, signOut, auth } from "@/auth";
+import { auth, signOut } from "@/auth";
 import { getPrisma } from "@/lib/prisma";
 import { onboardingProfileSchema } from "@/lib/validations";
-import type { AuthActionState, OnboardingActionState } from "@/lib/auth-types";
+import type { OnboardingActionState } from "@/lib/auth-types";
 import { isValidUsername, makeUniqueUsername, normalizeUsername } from "@/lib/usernames";
 
 export function getSafeCallbackUrl(value: FormDataEntryValue | string | null | undefined) {
@@ -85,25 +85,6 @@ export async function getCurrentUser() {
 export async function hasSessionCookie() {
   const session = await auth();
   return Boolean(session?.user?.id);
-}
-
-export async function signInWithGoogleAction(formData: FormData): Promise<AuthActionState> {
-  const callbackUrl = getSafeCallbackUrl(formData.get("callbackUrl"));
-
-  try {
-    await signIn("google", {
-      redirectTo: `/auth?callbackUrl=${encodeURIComponent(callbackUrl)}`,
-    });
-  } catch (error) {
-    if (isNextRedirect(error)) {
-      throw error;
-    }
-
-    console.error("[auth] google sign-in failed", error instanceof Error ? error.name : "unknown");
-    return { error: "Не получилось войти через Google. Попробуй ещё раз." };
-  }
-
-  return {};
 }
 
 export async function logoutAction() {
@@ -189,8 +170,4 @@ export async function skipOnboardingAction(formData: FormData) {
   });
 
   redirect(callbackUrl);
-}
-
-function isNextRedirect(error: unknown) {
-  return error instanceof Error && error.message === "NEXT_REDIRECT";
 }

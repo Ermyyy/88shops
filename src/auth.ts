@@ -1,15 +1,13 @@
 import NextAuth from "next-auth";
-import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { PrismaAdapter } from "@auth/prisma-adapter";
-import type { Profile } from "next-auth";
 import { getPrisma } from "@/lib/prisma";
 import {
   verifyTelegramLoginWidgetData,
   verifyTelegramMiniAppInitData,
   type VerifiedTelegramUser,
 } from "@/lib/telegram-auth";
-import { makeDisplayName, splitName } from "@/lib/usernames";
+import { makeDisplayName } from "@/lib/usernames";
 
 function getAdapter() {
   if (!process.env.DATABASE_URL) {
@@ -90,22 +88,6 @@ function parseLoginWidgetPayload(value: unknown) {
   }
 }
 
-async function syncGoogleProfile(userId: string, profile?: Profile) {
-  const { firstName, lastName } = splitName(profile?.name);
-
-  await getPrisma().user.update({
-    where: { id: userId },
-    data: {
-      firstName: profile?.given_name ?? firstName,
-      lastName: profile?.family_name ?? lastName,
-      avatarUrl: typeof profile?.picture === "string" ? profile.picture : undefined,
-      image: typeof profile?.picture === "string" ? profile.picture : undefined,
-      name: profile?.name ?? undefined,
-      emailVerified: profile?.email_verified ? new Date() : undefined,
-    },
-  });
-}
-
 export const {
   handlers: { GET, POST },
   auth,
@@ -113,9 +95,7 @@ export const {
   signOut,
 } = NextAuth(() => ({
   adapter: getAdapter(),
-  secret:
-    process.env.AUTH_SECRET ??
-    (process.env.NODE_ENV === "production" ? undefined : "dev-only-auth-secret-change-me"),
+  secret: process.env.AUTH_SECRET,
   trustHost: true,
   session: {
     strategy: "jwt",
@@ -126,7 +106,6 @@ export const {
     error: "/auth",
   },
   providers: [
-    Google,
     Credentials({
       id: "telegram",
       name: "Telegram",
@@ -165,13 +144,9 @@ export const {
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn() {
       if (!process.env.DATABASE_URL) {
         return false;
-      }
-
-      if (account?.provider === "google" && user.id) {
-        await syncGoogleProfile(user.id, profile);
       }
 
       return true;

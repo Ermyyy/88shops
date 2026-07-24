@@ -5,7 +5,6 @@ import { FavoriteButton } from "@/components/ui/favorite-button";
 import { Price } from "@/components/ui/price";
 import { SafeImage } from "@/components/ui/safe-image";
 import { AUTHENTICITY_LABELS } from "@/lib/constants";
-import { getSellerForProduct } from "@/lib/mock-data";
 import { getProductSize } from "@/lib/utils";
 import type { Product } from "@/types";
 
@@ -15,7 +14,10 @@ type ProductCardProps = {
 };
 
 export function ProductCard({ product, isAuthenticated = true }: ProductCardProps) {
-  const seller = getSellerForProduct(product);
+  const seller = product.seller ?? {
+    name: "Продавец 88Shops",
+    verified: false,
+  };
 
   return (
     <article className="group overflow-hidden rounded-[12px] border border-black/10 bg-white transition hover:border-black/18 hover:shadow-sm">

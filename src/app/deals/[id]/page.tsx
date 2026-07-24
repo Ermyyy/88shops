@@ -10,13 +10,15 @@ import { Price } from "@/components/ui/price";
 import { SafeImage } from "@/components/ui/safe-image";
 import { StatusBadge } from "@/components/ui/status-badge";
 import { DEAL_METHOD_LABELS, DEAL_STATUSES } from "@/lib/constants";
-import { deals, getDealById, getProductById, getUserById } from "@/lib/mock-data";
+import { getDealPageData } from "@/lib/market-data";
 import { formatDate } from "@/lib/utils";
 import type { DealStatus } from "@/types";
 
 type DealPageProps = {
   params: Promise<{ id: string }>;
 };
+
+export const dynamic = "force-dynamic";
 
 const statusLabels: Record<DealStatus, string> = {
   PENDING: "Договориться",
@@ -30,13 +32,10 @@ const statusLabels: Record<DealStatus, string> = {
   COMPLETED: "Готово",
 };
 
-export function generateStaticParams() {
-  return deals.map((deal) => ({ id: deal.id }));
-}
-
 export async function generateMetadata({ params }: DealPageProps): Promise<Metadata> {
   const { id } = await params;
-  const deal = getDealById(id);
+  const data = await getDealPageData(id);
+  const deal = data?.deal;
 
   return {
     title: deal ? `Сделка ${deal.id}` : "Сделка не найдена",
@@ -46,15 +45,13 @@ export async function generateMetadata({ params }: DealPageProps): Promise<Metad
 
 export default async function DealPage({ params }: DealPageProps) {
   const { id } = await params;
-  const deal = getDealById(id);
+  const data = await getDealPageData(id);
 
-  if (!deal) {
+  if (!data) {
     notFound();
   }
 
-  const product = getProductById(deal.productId);
-  const buyer = getUserById(deal.buyerId);
-  const seller = getUserById(deal.sellerId);
+  const { deal, product, buyerName, sellerName } = data;
   const currentIndex = DEAL_STATUSES.indexOf(deal.status);
 
   return (
@@ -108,8 +105,8 @@ export default async function DealPage({ params }: DealPageProps) {
           </div>
 
           <div className="grid gap-3 md:grid-cols-2">
-            <Participant title="Покупатель" name={buyer?.displayName} />
-            <Participant title="Продавец" name={seller?.displayName} />
+            <Participant title="Покупатель" name={buyerName} />
+            <Participant title="Продавец" name={sellerName} />
           </div>
         </section>
 

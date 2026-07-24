@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useDropzone } from "react-dropzone";
 import { useForm, useWatch, type Resolver } from "react-hook-form";
 import { toast } from "sonner";
+import { createProductAction } from "@/lib/product-actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
@@ -96,11 +97,35 @@ export function SellForm() {
     );
   };
 
-  const onSubmit = async () => {
+  const onSubmit = async (values: SellFormValues) => {
     setSubmitting(true);
-    await new Promise((resolve) => window.setTimeout(resolve, 500));
-    toast("Форма проверена. Сохранение объявления подключим к backend отдельно.");
-    setSubmitting(false);
+    const result = await createProductAction({
+      title: values.title,
+      brand: values.brand,
+      category: values.category,
+      clothingSize: values.clothingSize,
+      shoeSize: values.shoeSize,
+      price: values.price,
+      authenticityType: values.authenticityType,
+      condition: values.condition,
+      description: values.description,
+      city: values.city,
+      dealMethods: values.dealMethods,
+    });
+
+    if (!result.ok) {
+      if (result.error === "AUTH_REQUIRED") {
+        window.location.assign("/auth?callbackUrl=%2Fsell");
+        return;
+      }
+
+      toast(result.error);
+      setSubmitting(false);
+      return;
+    }
+
+    toast("Объявление создано");
+    window.location.assign(`/product/${result.productId}`);
   };
 
   return (

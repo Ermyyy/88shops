@@ -13,12 +13,8 @@ function createPrismaClient() {
   }
 
   const adapter = new PrismaPg({ connectionString });
-  const client = globalForPrisma.prisma ?? new PrismaClient({ adapter });
-
-  if (process.env.NODE_ENV !== "production") {
-    globalForPrisma.prisma = client;
-  }
-
+  const client = new PrismaClient({ adapter });
+  globalForPrisma.prisma = client;
   return client;
 }
 

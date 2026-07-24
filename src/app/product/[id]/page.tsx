@@ -17,29 +17,19 @@ import {
   DEAL_METHOD_LABELS,
 } from "@/lib/constants";
 import { hasSessionCookie } from "@/lib/auth";
-import {
-  getProductById,
-  getRelatedProducts,
-  getReviewsForShop,
-  getReviewsForUser,
-  getSellerForProduct,
-  getShopById,
-  getUserById,
-  products,
-} from "@/lib/mock-data";
+import { getProductPageData } from "@/lib/market-data";
 import { formatDate, formatPrice, getProductSize } from "@/lib/utils";
 
 type ProductPageProps = {
   params: Promise<{ id: string }>;
 };
 
-export function generateStaticParams() {
-  return products.map((product) => ({ id: product.id }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { id } = await params;
-  const product = getProductById(id);
+  const data = await getProductPageData(id);
+  const product = data?.product;
 
   if (!product) {
     return { title: "Товар не найден" };
@@ -57,16 +47,13 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { id } = await params;
-  const product = getProductById(id);
+  const data = await getProductPageData(id);
 
-  if (!product) {
+  if (!data) {
     notFound();
   }
 
-  const seller = getSellerForProduct(product);
-  const shop = getShopById(product.shopId);
-  const reviews = shop ? getReviewsForShop(shop.id) : getReviewsForUser(product.sellerId);
-  const related = getRelatedProducts(product);
+  const { product, seller, reviews, related } = data;
   const isAuthenticated = await hasSessionCookie();
 
   return (
@@ -173,17 +160,15 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <div className="grid gap-3 md:grid-cols-2">
           {reviews.length > 0 ? (
             reviews.map((review) => {
-              const author = getUserById(review.authorId);
-
               return (
                 <article key={review.id} className="rounded-[8px] border border-black/10 p-4">
                   <div className="mb-3 flex items-center gap-3">
                     <Avatar
-                      name={author?.displayName ?? "Покупатель"}
+                      name={review.authorName ?? "Покупатель"}
                     />
                     <div>
                       <p className="font-semibold text-black">
-                        {author?.displayName ?? "Покупатель"}
+                        {review.authorName ?? "Покупатель"}
                       </p>
                       <Rating value={review.rating} />
                     </div>

@@ -11,26 +11,19 @@ import { ProductCard } from "@/components/ui/product-card";
 import { Rating } from "@/components/ui/rating";
 import { SafeImage } from "@/components/ui/safe-image";
 import { Tabs } from "@/components/ui/tabs";
-import {
-  getProductsBySeller,
-  getReviewsForUser,
-  getUserById,
-  getUserByUsername,
-  users,
-} from "@/lib/mock-data";
+import { getProfilePageData } from "@/lib/market-data";
 import { formatDate } from "@/lib/utils";
 
 type ProfilePageProps = {
   params: Promise<{ username: string }>;
 };
 
-export function generateStaticParams() {
-  return users.map((user) => ({ username: user.username }));
-}
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({ params }: ProfilePageProps): Promise<Metadata> {
   const { username } = await params;
-  const user = getUserByUsername(username);
+  const data = await getProfilePageData(username);
+  const user = data?.user;
 
   if (!user) {
     return { title: "Профиль не найден" };
@@ -44,14 +37,13 @@ export async function generateMetadata({ params }: ProfilePageProps): Promise<Me
 
 export default async function ProfilePage({ params }: ProfilePageProps) {
   const { username } = await params;
-  const user = getUserByUsername(username);
+  const data = await getProfilePageData(username);
 
-  if (!user) {
+  if (!data) {
     notFound();
   }
 
-  const listings = getProductsBySeller(user.id);
-  const reviews = getReviewsForUser(user.id);
+  const { user, listings, reviews } = data;
 
   return (
     <div className="page-shell py-6 md:py-8">
@@ -146,8 +138,6 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               <div className="grid gap-3 md:grid-cols-2">
                 {reviews.length > 0 ? (
                   reviews.map((review) => {
-                    const author = getUserById(review.authorId);
-
                     return (
                       <article
                         key={review.id}
@@ -155,11 +145,11 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
                       >
                         <div className="mb-3 flex items-center gap-3">
                           <Avatar
-                            name={author?.displayName ?? "Покупатель"}
+                            name={review.authorName ?? "Покупатель"}
                           />
                           <div>
                             <p className="font-semibold text-black">
-                              {author?.displayName ?? "Покупатель"}
+                              {review.authorName ?? "Покупатель"}
                             </p>
                             <Rating value={review.rating} />
                           </div>

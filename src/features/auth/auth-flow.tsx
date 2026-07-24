@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import Script from "next/script";
 import { signIn } from "next-auth/react";
-import { Send, ShieldCheck, Sparkles } from "lucide-react";
+import { Send, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -80,7 +80,7 @@ type TelegramWindow = Window & {
 export function AuthFlow({
   callbackUrl = "/catalog",
   initialError = "",
-  telegramBotUsername = process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME,
+  telegramBotUsername,
 }: AuthFlowProps) {
   /**
    * Сообщение об ошибке или временное уведомление.
@@ -104,10 +104,10 @@ export function AuthFlow({
    * Отправляет данные Telegram непосредственно
    * в Auth.js Credentials provider с id="telegram".
    */
-  async function submitTelegram(credentials: {
+  const submitTelegram = useCallback(async (credentials: {
     initData?: string;
     loginData?: string;
-  }) {
+  }) => {
     setPendingTelegram(true);
     setError("");
 
@@ -166,7 +166,7 @@ export function AuthFlow({
     } finally {
       setPendingTelegram(false);
     }
-  }
+  }, [callbackUrl]);
 
   /**
    * Подключаем поведение Telegram после загрузки страницы.
@@ -206,7 +206,7 @@ export function AuthFlow({
     return () => {
       delete telegramWindow.onTelegramAuth;
     };
-  }, [callbackUrl]);
+  }, [submitTelegram]);
 
   /**
    * Нажатие на основную Telegram-кнопку.
@@ -252,17 +252,6 @@ export function AuthFlow({
      */
     setError(
       "Не найден NEXT_PUBLIC_TELEGRAM_BOT_USERNAME. Перезапусти сервер после изменения .env.local.",
-    );
-  }
-
-  /**
-   * Google пока оставляем заглушкой.
-   */
-  function handleGoogleLogin() {
-    setShowTelegramWidget(false);
-
-    setError(
-      "Вход через Google пока не подключён. Используй Telegram.",
     );
   }
 
@@ -357,21 +346,6 @@ export function AuthFlow({
             </div>
           ) : null}
 
-          {/* Google пока только визуальная заглушка */}
-          <Button
-            type="button"
-            variant="secondary"
-            size="lg"
-            className="w-full"
-            onClick={handleGoogleLogin}
-          >
-            <Sparkles
-              aria-hidden="true"
-              className="h-5 w-5"
-            />
-
-            Продолжить с Google
-          </Button>
         </div>
 
         {/* Ошибка или информационное сообщение */}

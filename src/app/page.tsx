@@ -4,16 +4,12 @@ import { LinkButton } from "@/components/ui/button";
 import { ProductCard } from "@/components/ui/product-card";
 import { SectionHeading } from "@/components/ui/section-heading";
 import { ShopCard } from "@/components/ui/shop-card";
-import { products, shops } from "@/lib/mock-data";
+import { getHomeData } from "@/lib/market-data";
 
-export default function Home() {
-  const freshProducts = products.slice(0, 15);
-  const popularProducts = [...products]
-    .sort((a, b) => b.popularityScore - a.popularityScore)
-    .slice(0, 10);
-  const popularShops = [...shops]
-    .sort((a, b) => b.rating + b.salesCount / 1000 - (a.rating + a.salesCount / 1000))
-    .slice(0, 3);
+export const dynamic = "force-dynamic";
+
+export default async function Home() {
+  const { freshProducts, popularProducts, popularShops } = await getHomeData();
 
   return (
     <>

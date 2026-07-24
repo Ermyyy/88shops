@@ -34,7 +34,7 @@ export const sellFormSchema = z
     description: z.string().min(40, "Опишите состояние и детали вещи"),
     city: z.enum(CITIES),
     dealMethods: z.array(z.enum(["PERSONAL_MEETING", "DIRECT", "SAFE_DEAL"])).min(1),
-    photos: z.array(imageFileSchema).min(1, "Добавьте минимум одно фото").max(6),
+    photos: z.array(imageFileSchema).max(6).optional().default([]),
   })
   .refine((value) => value.clothingSize || value.shoeSize, {
     message: "Укажите размер одежды или обуви",

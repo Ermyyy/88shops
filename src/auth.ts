@@ -125,7 +125,7 @@ export const {
         },
       },
       token: `${TELEGRAM_ISSUER}/token`,
-      checks: ["pkce", "state"],
+      checks: ["pkce"],
       idToken: true,
       clientId: process.env.TELEGRAM_CLIENT_ID,
       clientSecret: process.env.TELEGRAM_CLIENT_SECRET,

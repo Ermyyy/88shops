@@ -1,91 +1,95 @@
 import NextAuth from "next-auth";
-import Credentials from "next-auth/providers/credentials";
+import type { Adapter, AdapterUser } from "next-auth/adapters";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { getPrisma } from "@/lib/prisma";
-import {
-  verifyTelegramLoginWidgetData,
-  verifyTelegramMiniAppInitData,
-  type VerifiedTelegramUser,
-} from "@/lib/telegram-auth";
 import { makeDisplayName } from "@/lib/usernames";
+
+const TELEGRAM_ISSUER = "https://oauth.telegram.org";
+
+type TelegramOidcProfile = {
+  sub?: string;
+  id?: string | number;
+  name?: string;
+  given_name?: string;
+  family_name?: string;
+  preferred_username?: string;
+  picture?: string;
+};
+
+type TelegramAdapterUser = AdapterUser & {
+  firstName?: string | null;
+  lastName?: string | null;
+  telegramId?: string | null;
+  telegramUsername?: string | null;
+  avatarUrl?: string | null;
+};
+
+function getTelegramProfileId(profile: TelegramOidcProfile) {
+  return String(profile.id ?? profile.sub ?? "");
+}
+
+function mapTelegramProfile(profile: TelegramOidcProfile) {
+  const telegramId = getTelegramProfileId(profile);
+  const firstName = profile.given_name ?? null;
+  const lastName = profile.family_name ?? null;
+  const username = profile.preferred_username ?? null;
+  const name =
+    profile.name ??
+    makeDisplayName({
+      firstName: firstName ?? undefined,
+      lastName: lastName ?? undefined,
+      username: username ?? undefined,
+    });
+
+  return {
+    id: telegramId,
+    name,
+    image: profile.picture ?? null,
+    firstName,
+    lastName,
+    telegramId,
+    telegramUsername: username,
+    avatarUrl: profile.picture ?? null,
+  };
+}
 
 function getAdapter() {
   if (!process.env.DATABASE_URL) {
     return undefined;
   }
 
-  return PrismaAdapter(getPrisma() as never);
-}
+  const prisma = getPrisma();
+  const adapter = PrismaAdapter(prisma as never) as Adapter;
 
-async function upsertTelegramUser(telegramUser: VerifiedTelegramUser) {
-  const db = getPrisma();
-  const displayName = makeDisplayName({
-    firstName: telegramUser.firstName,
-    lastName: telegramUser.lastName,
-    username: telegramUser.username,
-  });
+  return {
+    ...adapter,
+    async createUser(user) {
+      const telegramUser = user as TelegramAdapterUser;
+      const telegramId = telegramUser.telegramId;
 
-  const user = await db.user.upsert({
-    where: { telegramId: telegramUser.id },
-    update: {
-      telegramUsername: telegramUser.username,
-      firstName: telegramUser.firstName,
-      lastName: telegramUser.lastName,
-      name: displayName,
-      image: telegramUser.avatarUrl,
-      avatarUrl: telegramUser.avatarUrl,
-    },
-    create: {
-      telegramId: telegramUser.id,
-      telegramUsername: telegramUser.username,
-      firstName: telegramUser.firstName,
-      lastName: telegramUser.lastName,
-      name: displayName,
-      image: telegramUser.avatarUrl,
-      avatarUrl: telegramUser.avatarUrl,
-    },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      avatarUrl: true,
-    },
-  });
+      if (telegramId) {
+        const existing = await prisma.user.findUnique({
+          where: { telegramId },
+        });
 
-  await db.account.upsert({
-    where: {
-      provider_providerAccountId: {
-        provider: "telegram",
-        providerAccountId: telegramUser.id,
-      },
-    },
-    update: {
-      userId: user.id,
-    },
-    create: {
-      userId: user.id,
-      type: "credentials",
-      provider: "telegram",
-      providerAccountId: telegramUser.id,
-    },
-  });
+        if (existing) {
+          return prisma.user.update({
+            where: { id: existing.id },
+            data: {
+              name: telegramUser.name ?? existing.name,
+              image: telegramUser.image ?? existing.image,
+              avatarUrl: telegramUser.avatarUrl ?? existing.avatarUrl,
+              firstName: telegramUser.firstName ?? existing.firstName,
+              lastName: telegramUser.lastName ?? existing.lastName,
+              telegramUsername: telegramUser.telegramUsername ?? existing.telegramUsername,
+            },
+          }) as Promise<AdapterUser>;
+        }
+      }
 
-  return user;
-}
-
-function parseLoginWidgetPayload(value: unknown) {
-  if (typeof value !== "string") {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(value) as Record<string, unknown>;
-    return Object.fromEntries(
-      Object.entries(parsed).map(([key, item]) => [key, item == null ? undefined : String(item)]),
-    );
-  } catch {
-    return null;
-  }
+      return adapter.createUser?.(user) as Promise<AdapterUser>;
+    },
+  } satisfies Adapter;
 }
 
 export const {
@@ -106,43 +110,68 @@ export const {
     error: "/auth",
   },
   providers: [
-    Credentials({
+    {
       id: "telegram",
       name: "Telegram",
-      credentials: {
-        initData: {},
-        loginData: {},
+      type: "oidc",
+      issuer: TELEGRAM_ISSUER,
+      jwks_endpoint: `${TELEGRAM_ISSUER}/.well-known/jwks.json`,
+      wellKnown: `${TELEGRAM_ISSUER}/.well-known/openid-configuration`,
+      authorization: {
+        url: `${TELEGRAM_ISSUER}/auth`,
+        params: {
+          scope: "openid profile telegram:bot_access",
+          response_type: "code",
+        },
       },
-      async authorize(credentials) {
-        const botToken = process.env.TELEGRAM_BOT_TOKEN;
-
-        if (!botToken || !process.env.DATABASE_URL) {
-          return null;
-        }
-
-        const initData = typeof credentials.initData === "string" ? credentials.initData : "";
-        const loginData = parseLoginWidgetPayload(credentials.loginData);
-        const telegramUser = initData
-          ? verifyTelegramMiniAppInitData(initData, botToken)
-          : loginData
-            ? verifyTelegramLoginWidgetData(loginData, botToken)
-            : null;
-
-        if (!telegramUser) {
-          return null;
-        }
-
-        const user = await upsertTelegramUser(telegramUser);
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.avatarUrl,
-        };
+      token: `${TELEGRAM_ISSUER}/token`,
+      checks: ["pkce", "state"],
+      idToken: true,
+      clientId: process.env.TELEGRAM_CLIENT_ID,
+      clientSecret: process.env.TELEGRAM_CLIENT_SECRET,
+      profile(profile: TelegramOidcProfile) {
+        return mapTelegramProfile(profile);
       },
-    }),
+    },
   ],
+  events: {
+    async signIn({ user, profile, account }) {
+      if (account?.provider !== "telegram" || !profile || !user.id) {
+        return;
+      }
+
+      const telegramProfile = profile as TelegramOidcProfile;
+      const telegramId = getTelegramProfileId(telegramProfile);
+
+      if (!telegramId) {
+        return;
+      }
+
+      const firstName = telegramProfile.given_name ?? null;
+      const lastName = telegramProfile.family_name ?? null;
+      const telegramUsername = telegramProfile.preferred_username ?? null;
+      const displayName =
+        telegramProfile.name ??
+        makeDisplayName({
+          firstName: firstName ?? undefined,
+          lastName: lastName ?? undefined,
+          username: telegramUsername ?? undefined,
+        });
+
+      await getPrisma().user.update({
+        where: { id: user.id },
+        data: {
+          telegramId,
+          telegramUsername,
+          firstName,
+          lastName,
+          name: displayName,
+          image: telegramProfile.picture ?? null,
+          avatarUrl: telegramProfile.picture ?? null,
+        },
+      });
+    },
+  },
   callbacks: {
     async signIn() {
       if (!process.env.DATABASE_URL) {
@@ -166,12 +195,16 @@ export const {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) {
+      if (url.startsWith("/") && !url.startsWith("//")) {
         return `${baseUrl}${url}`;
       }
 
-      const parsed = new URL(url);
-      return parsed.origin === baseUrl ? url : baseUrl;
+      try {
+        const parsed = new URL(url);
+        return parsed.origin === baseUrl ? url : `${baseUrl}/catalog`;
+      } catch {
+        return `${baseUrl}/catalog`;
+      }
     },
   },
   logger: {

@@ -11,23 +11,23 @@ export function getSafeCallbackUrl(value: FormDataEntryValue | string | null | u
   const raw = typeof value === "string" ? value : "";
 
   if (!raw || !raw.startsWith("/") || raw.startsWith("//")) {
-    return "/";
+    return "/catalog";
   }
 
   try {
     const parsed = new URL(raw, "https://88shops.local");
 
     if (parsed.origin !== "https://88shops.local") {
-      return "/";
+      return "/catalog";
     }
 
     if (parsed.pathname.startsWith("/auth") || parsed.pathname.startsWith("/onboarding")) {
-      return "/";
+      return "/catalog";
     }
 
     return `${parsed.pathname}${parsed.search}${parsed.hash}`;
   } catch {
-    return "/";
+    return "/catalog";
   }
 }
 

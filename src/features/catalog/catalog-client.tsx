@@ -82,6 +82,7 @@ export function CatalogClient({
   }, [filters, products, sort]);
 
   const reset = () => setFilters(emptyFilters);
+  const hasProducts = products.length > 0;
 
   return (
     <div className="page-shell py-5">
@@ -146,12 +147,18 @@ export function CatalogClient({
             </div>
           ) : (
             <EmptyState
-              title="Ничего не найдено"
-              description="Измени фильтры или попробуй другой запрос."
+              title={hasProducts ? "Ничего не найдено" : "Товары пока не добавлены"}
+              description={
+                hasProducts
+                  ? "Измени фильтры или попробуй другой запрос."
+                  : "В production-базе пока нет активных объявлений."
+              }
               action={
-                <Button type="button" variant="secondary" onClick={reset}>
-                  Сбросить фильтры
-                </Button>
+                hasProducts ? (
+                  <Button type="button" variant="secondary" onClick={reset}>
+                    Сбросить фильтры
+                  </Button>
+                ) : null
               }
             />
           )}

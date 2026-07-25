@@ -37,7 +37,7 @@ export function middleware(request: NextRequest) {
   }
 
   if (!hasAuthSessionCookie(request)) {
-    const callback = isSafeCallback(`${pathname}${search}`) ? `${pathname}${search}` : "/";
+    const callback = isSafeCallback(`${pathname}${search}`) ? `${pathname}${search}` : "/catalog";
     const url = request.nextUrl.clone();
     url.pathname = "/auth";
     url.search = `?callbackUrl=${encodeURIComponent(callback)}`;

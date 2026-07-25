@@ -1,0 +1,64 @@
+(node:7560) Warning: SECURITY WARNING: The SSL modes 'prefer', 'require', and 'verify-ca' are treated as aliases for 'verify-full'.
+In the next major version (pg-connection-string v3.0.0 and pg v9.0.0), these modes will adopt standard libpq semantics, which have weaker security guarantees.
+
+To prepare for this change:
+- If you want the current behavior, explicitly use 'sslmode=verify-full'
+- If you want libpq compatibility now, use 'uselibpqcompat=true&sslmode=require'
+
+See https://www.postgresql.org/docs/current/libpq-ssl.html for libpq SSL mode definitions.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[market-data] {
+  operation: 'getProductPageData.relations',
+  route: '/product/[id]',
+  productId: 'p-001',
+  error: 'Error',
+  code: undefined
+}
+⨯ Error: Query read timeout
+    at async g (C:\Users\Артем\Desktop\production-products\shops\.next\server\chunks\ssr\[root-of-the-server]__11xhc-d._.js:5:48)
+    at async u (C:\Users\Артем\Desktop\production-products\shops\.next\server\chunks\ssr\[root-of-the-server]__11xhc-d._.js:38:126)
+    at async s (C:\Users\Артем\Desktop\production-products\shops\.next\server\chunks\ssr\[root-of-the-server]__11xhc-d._.js:32:2030)
+    at async m (C:\Users\Артем\Desktop\production-products\shops\.next\server\chunks\ssr\[root-of-the-server]__11xhc-d._.js:16:130)
+    at async y (C:\Users\Артем\Desktop\production-products\shops\.next\server\chunks\ssr\[root-of-the-server]__1qmkfcj._.js:1:6156) {
+  digest: '648614946'
+}
+[market-data] {
+  operation: 'getProductPageData.product',
+  route: '/product/[id]',
+  productId: 'stone-island-shadow-project-nylon-jacket',
+  error: 'Error',
+  code: undefined
+}
+⨯ Error: Query read timeout
+    at async g (C:\Users\Артем\Desktop\production-products\shops\.next\server\chunks\ssr\[root-of-the-server]__11xhc-d._.js:5:48)
+    at async m (C:\Users\Артем\Desktop\production-products\shops\.next\server\chunks\ssr\[root-of-the-server]__11xhc-d._.js:11:349)
+    at async y (C:\Users\Артем\Desktop\production-products\shops\.next\server\chunks\ssr\[root-of-the-server]__1qmkfcj._.js:1:6156) {
+  digest: '100692854'
+}
+[market-data] {
+  operation: 'getProductPageData.relations',
+  route: '/product/[id]',
+  productId: 'p-001',
+  error: 'Error',
+  code: undefined
+}
+⨯ Error: Query read timeout
+    at async g (C:\Users\Артем\Desktop\production-products\shops\.next\server\chunks\ssr\[root-of-the-server]__11xhc-d._.js:5:48)
+    at async t (C:\Users\Артем\Desktop\production-products\shops\.next\server\chunks\ssr\[root-of-the-server]__11xhc-d._.js:32:2327)
+    at async s (C:\Users\Артем\Desktop\production-products\shops\.next\server\chunks\ssr\[root-of-the-server]__11xhc-d._.js:32:2030)
+    at async m (C:\Users\Артем\Desktop\production-products\shops\.next\server\chunks\ssr\[root-of-the-server]__11xhc-d._.js:22:98) {
+  digest: '2336059138'
+}
+[market-data] {
+  operation: 'getProductPageData.product',
+  route: '/product/[id]',
+  productId: 'does-not-exist',
+  error: 'Error',
+  code: undefined
+}
+⨯ Error: Query read timeout
+    at async g (C:\Users\Артем\Desktop\production-products\shops\.next\server\chunks\ssr\[root-of-the-server]__11xhc-d._.js:5:48)
+    at async m (C:\Users\Артем\Desktop\production-products\shops\.next\server\chunks\ssr\[root-of-the-server]__11xhc-d._.js:11:349)
+    at async y (C:\Users\Артем\Desktop\production-products\shops\.next\server\chunks\ssr\[root-of-the-server]__1qmkfcj._.js:1:6156) {
+  digest: '100692854'
+}

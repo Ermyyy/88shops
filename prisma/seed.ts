@@ -8,6 +8,28 @@ if (!connectionString) {
   throw new Error("DIRECT_URL is required for Prisma seed.");
 }
 
+function getSafeDatabaseInfo() {
+  const url = new URL(connectionString!);
+
+  return {
+    hostname: url.hostname,
+    endpoint: url.hostname.includes("-pooler") ? "pooler" : "direct",
+    database: url.pathname.replace("/", "") || "unknown",
+    schema: url.searchParams.get("schema") ?? "public",
+    sslmode: url.searchParams.get("sslmode") ?? "not-set",
+    length: connectionString!.length,
+  };
+}
+
+function assertProductionSeedAllowed() {
+  const production =
+    process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
+
+  if (production && process.env.ALLOW_PRODUCTION_SEED !== "true") {
+    throw new Error("Refusing to seed production without ALLOW_PRODUCTION_SEED=true.");
+  }
+}
+
 async function query(sql: string, params: unknown[] = []) {
   const client = new pg.Client({
     connectionString,
@@ -27,6 +49,11 @@ async function query(sql: string, params: unknown[] = []) {
 }
 
 async function main() {
+  assertProductionSeedAllowed();
+  const info = getSafeDatabaseInfo();
+  console.log(
+    `seed target host=${info.hostname} endpoint=${info.endpoint} database=${info.database} schema=${info.schema} sslmode=${info.sslmode} length=${info.length}`,
+  );
   console.log(
     `seed counts users=${users.length} shops=${shops.length} products=${products.length} reviews=${reviews.length} deals=${deals.length}`,
   );

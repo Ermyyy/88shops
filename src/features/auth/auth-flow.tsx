@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
 import { Send, ShieldCheck } from "lucide-react";
@@ -10,146 +10,25 @@ import { Button } from "@/components/ui/button";
 type AuthFlowProps = {
   callbackUrl?: string;
   initialError?: string;
-  telegramBotUsername?: string;
 };
 
-type TelegramLoginUser = {
-  id: number;
-  first_name: string;
-  last_name?: string;
-  username?: string;
-  photo_url?: string;
-  auth_date: number;
-  hash: string;
-};
-
-type TelegramWindow = Window & {
-  Telegram?: {
-    WebApp?: {
-      initData?: string;
-      ready?: () => void;
-      expand?: () => void;
-    };
-  };
-  onTelegramAuth?: (user: TelegramLoginUser) => void;
-};
-
-export function AuthFlow({
-  callbackUrl = "/catalog",
-  initialError = "",
-  telegramBotUsername,
-}: AuthFlowProps) {
+export function AuthFlow({ callbackUrl = "/catalog", initialError = "" }: AuthFlowProps) {
   const [error, setError] = useState(initialError);
   const [pendingTelegram, setPendingTelegram] = useState(false);
-  const [showTelegramWidget, setShowTelegramWidget] = useState(false);
-  const telegramWidgetRef = useRef<HTMLDivElement>(null);
 
-  const normalizedBotUsername = telegramBotUsername
-    ?.trim()
-    .replace(/^@/, "");
-
-  const submitTelegram = useCallback(
-    async (credentials: { initData?: string; loginData?: string }) => {
-      setPendingTelegram(true);
-      setError("");
-
-      try {
-        const result = await signIn("telegram", {
-          ...credentials,
-          redirect: false,
-          redirectTo: callbackUrl,
-        });
-
-        if (!result || result.error) {
-          setError(
-            "Не получилось войти через Telegram. Проверь настройки бота и попробуй ещё раз.",
-          );
-          return;
-        }
-
-        window.location.assign(result.url ?? callbackUrl);
-      } catch (authError) {
-        console.error("[telegram-auth]", authError);
-        setError("Сервер авторизации временно недоступен. Попробуй ещё раз.");
-      } finally {
-        setPendingTelegram(false);
-      }
-    },
-    [callbackUrl],
-  );
-
-  useEffect(() => {
-    const telegramWindow = window as TelegramWindow;
-
-    telegramWindow.Telegram?.WebApp?.ready?.();
-    telegramWindow.Telegram?.WebApp?.expand?.();
-
-    telegramWindow.onTelegramAuth = (user) => {
-      void submitTelegram({
-        loginData: JSON.stringify(user),
-      });
-    };
-
-    return () => {
-      delete telegramWindow.onTelegramAuth;
-    };
-  }, [submitTelegram]);
-
-  useEffect(() => {
-    if (!showTelegramWidget || !normalizedBotUsername) {
-      return;
-    }
-
-    const container = telegramWidgetRef.current;
-
-    if (!container) {
-      return;
-    }
-
-    container.replaceChildren();
-
-    const script = document.createElement("script");
-    script.src = "https://telegram.org/js/telegram-widget.js?22";
-    script.async = true;
-    script.setAttribute("data-telegram-login", normalizedBotUsername);
-    script.setAttribute("data-size", "large");
-    script.setAttribute("data-radius", "8");
-    script.setAttribute("data-userpic", "false");
-    script.setAttribute("data-request-access", "write");
-    script.setAttribute("data-onauth", "window.onTelegramAuth(user)");
-
-    script.onerror = () => {
-      setError(
-        "Не удалось загрузить Telegram Login Widget. Обнови страницу и попробуй ещё раз.",
-      );
-    };
-
-    container.appendChild(script);
-
-    return () => {
-      container.replaceChildren();
-    };
-  }, [showTelegramWidget, normalizedBotUsername]);
-
-  function handleTelegramLogin() {
-    const telegramWindow = window as TelegramWindow;
-    const initData = telegramWindow.Telegram?.WebApp?.initData;
-
+  async function handleTelegramLogin() {
+    setPendingTelegram(true);
     setError("");
 
-    if (initData) {
-      void submitTelegram({ initData });
-      return;
+    try {
+      await signIn("telegram", {
+        redirectTo: callbackUrl,
+      });
+    } catch (authError) {
+      console.error("[telegram-oidc-auth]", authError);
+      setError("Сервер авторизации временно недоступен. Попробуй ещё раз.");
+      setPendingTelegram(false);
     }
-
-    if (normalizedBotUsername) {
-      setShowTelegramWidget(true);
-      return;
-    }
-
-    setError(
-      "Не найден NEXT_PUBLIC_TELEGRAM_BOT_USERNAME. Проверь переменную окружения и пересобери приложение.",
-    );
   }
 
   return (
@@ -163,9 +42,7 @@ export function AuthFlow({
             <span className="text-xl font-semibold">88Shops</span>
           </Link>
 
-          <h1 className="mt-5 text-2xl font-semibold text-black">
-            Войти в 88Shops
-          </h1>
+          <h1 className="mt-5 text-2xl font-semibold text-black">Войти в 88Shops</h1>
 
           <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-black/60">
             Один аккаунт для покупок, продаж, избранного и своего магазина.
@@ -181,18 +58,8 @@ export function AuthFlow({
             disabled={pendingTelegram}
           >
             <Send aria-hidden="true" className="h-5 w-5" />
-            {pendingTelegram
-              ? "Входим через Telegram..."
-              : "Продолжить с Telegram"}
+            {pendingTelegram ? "Открываем Telegram..." : "Продолжить с Telegram"}
           </Button>
-
-          {showTelegramWidget && normalizedBotUsername ? (
-            <div
-              ref={telegramWidgetRef}
-              id="telegram-login-widget"
-              className="flex min-h-16 items-center justify-center rounded-[8px] border border-black/10 bg-black/[0.025] px-3 py-3"
-            />
-          ) : null}
         </div>
 
         {error ? (
@@ -205,8 +72,7 @@ export function AuthFlow({
         ) : null}
 
         <p className="mt-5 text-center text-xs leading-5 text-black/45">
-          Продолжая, ты принимаешь правила сервиса и политику
-          конфиденциальности.
+          Продолжая, ты принимаешь правила сервиса и политику конфиденциальности.
         </p>
 
         <div className="mt-5 flex justify-center">

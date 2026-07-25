@@ -5,11 +5,20 @@ import { getCurrentUser, getSafeCallbackUrl } from "@/lib/auth";
 
 export const metadata: Metadata = {
   title: "Войти в 88Shops",
-  description: "Вход в 88Shops через Telegram.",
+  description: "Вход в 88Shops через Telegram OpenID Connect.",
 };
 
 type AuthPageProps = {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
+};
+
+const AUTH_ERROR_MESSAGES: Record<string, string> = {
+  OAuthSignin: "Не получилось открыть вход через Telegram. Попробуй ещё раз.",
+  OAuthCallbackError: "Telegram не подтвердил вход. Попробуй ещё раз.",
+  AccessDenied: "Доступ через Telegram не был подтверждён.",
+  Configuration: "Вход через Telegram временно недоступен. Мы уже знаем, где смотреть настройки.",
+  Callback: "Не получилось завершить вход через Telegram. Попробуй ещё раз.",
+  CallbackRouteError: "Не получилось завершить вход через Telegram. Попробуй ещё раз.",
 };
 
 export default async function AuthPage({ searchParams }: AuthPageProps) {
@@ -29,7 +38,6 @@ export default async function AuthPage({ searchParams }: AuthPageProps) {
     <AuthFlow
       callbackUrl={callbackUrl}
       initialError={getAuthError(getParam(params.error))}
-      telegramBotUsername={process.env.NEXT_PUBLIC_TELEGRAM_BOT_USERNAME}
     />
   );
 }
@@ -43,9 +51,5 @@ function getAuthError(value: string | undefined) {
     return undefined;
   }
 
-  if (["AccessDenied", "Configuration", "CallbackRouteError"].includes(value)) {
-    return "Не получилось войти через Telegram. Проверь настройки бота и попробуй еще раз.";
-  }
-
-  return "Не получилось войти. Попробуй еще раз.";
+  return AUTH_ERROR_MESSAGES[value] ?? "Не получилось войти. Попробуй ещё раз.";
 }

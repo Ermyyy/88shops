@@ -3,7 +3,7 @@ import "server-only";
 import pg from "pg";
 import type { QueryResultRow } from "pg";
 import { getPrisma } from "@/lib/prisma";
-import type { Deal, Product, Review, Shop, User } from "@/types";
+import type { Deal, Product, ProductImage, Review, Shop, User } from "@/types";
 
 type DbUser = {
   id: string;
@@ -68,11 +68,12 @@ type DbProduct = {
   city: string;
   description: string;
   status: Product["status"];
-  dealMethods: Product["dealMethods"];
+  dealMethods: Product["dealMethods"] | string | null;
   popularityScore: number;
   createdAt: Date;
   seller?: DbUser;
   shop?: DbShop | null;
+  images?: ProductImage[];
 };
 
 const productColumns = `
@@ -81,34 +82,52 @@ const productColumns = `
   "status", "dealMethods", "popularityScore", "createdAt"
 `;
 
-async function queryRows<T extends QueryResultRow>(sql: string, params: unknown[] = []) {
+const globalForPg = globalThis as typeof globalThis & {
+  marketDataPool?: pg.Pool;
+};
+
+function getMarketDataPool() {
   const connectionString = process.env.DATABASE_URL;
 
   if (!connectionString) {
     throw new Error("DATABASE_URL is required for runtime data access.");
   }
 
-  const client = new pg.Client({
-    connectionString,
-    ssl: { rejectUnauthorized: false },
-    connectionTimeoutMillis: 5_000,
-    query_timeout: 10_000,
-  });
+  if (!globalForPg.marketDataPool) {
+    globalForPg.marketDataPool = new pg.Pool({
+      connectionString,
+      ssl: { rejectUnauthorized: false },
+      connectionTimeoutMillis: 5_000,
+      idleTimeoutMillis: 30_000,
+      max: 5,
+    });
 
-  client.on("error", () => {});
-
-  try {
-    await client.connect();
-    const result = await client.query<T>(sql, params);
-    return result.rows;
-  } finally {
-    await Promise.race([
-      client.end().catch(() => {}),
-      new Promise<void>((resolve) => {
-        setTimeout(resolve, 250);
-      }),
-    ]);
+    globalForPg.marketDataPool.on("error", (error) => {
+      logDataError("pg.pool", error);
+    });
   }
+
+  return globalForPg.marketDataPool;
+}
+
+async function queryRows<T extends QueryResultRow>(sql: string, params: unknown[] = []) {
+  const result = await getMarketDataPool().query<T>(sql, params);
+
+  return result.rows;
+}
+
+function logDataError(operation: string, error: unknown, context?: Record<string, string>) {
+  const code =
+    typeof error === "object" && error !== null && "code" in error
+      ? String((error as { code?: unknown }).code)
+      : undefined;
+
+  console.error("[market-data]", {
+    operation,
+    ...context,
+    error: error instanceof Error ? error.name : "unknown",
+    code,
+  });
 }
 
 async function getActiveProducts(order: "fresh" | "popular", limit?: number) {
@@ -127,7 +146,7 @@ async function getActiveProducts(order: "fresh" | "popular", limit?: number) {
 export async function getCatalogProducts() {
   const products = await getActiveProducts("fresh");
 
-  return products.map(mapProduct);
+  return (await attachProductRelations(products)).map(mapProduct);
 }
 
 export async function getHomeData() {
@@ -138,8 +157,8 @@ export async function getHomeData() {
   ]);
 
   return {
-    freshProducts: fresh.map(mapProduct),
-    popularProducts: popular.map(mapProduct),
+    freshProducts: (await attachProductRelations(fresh)).map(mapProduct),
+    popularProducts: (await attachProductRelations(popular)).map(mapProduct),
     popularShops: shops.map(mapShop),
   };
 }
@@ -151,49 +170,61 @@ export async function getShops() {
 }
 
 export async function getProductPageData(idOrSlug: string) {
-  const [product] = await queryRows<DbProduct>(
-    `
-      SELECT ${productColumns}
-      FROM "Product"
-      WHERE "status" = 'ACTIVE' AND ("id" = $1 OR "slug" = $1)
-      LIMIT 1
-    `,
-    [idOrSlug],
-  );
+  let product: DbProduct | undefined;
+
+  try {
+    [product] = await queryRows<DbProduct>(
+      `
+        SELECT ${productColumns}
+        FROM "Product"
+        WHERE "status" = 'ACTIVE' AND ("id" = $1 OR "slug" = $1)
+        LIMIT 1
+      `,
+      [idOrSlug],
+    );
+  } catch (error) {
+    logDataError("getProductPageData.product", error, { route: "/product/[id]", productId: idOrSlug });
+    throw error;
+  }
 
   if (!product) {
     return null;
   }
 
-  const [productWithRelations] = await attachProductRelations([product]);
-  const [reviews, related] = await Promise.all([
-    product.shopId
-      ? getPrisma().review.findMany({
-          where: { targetShopId: product.shopId },
-          orderBy: { createdAt: "desc" },
-        })
-      : getPrisma().review.findMany({
-          where: { targetUserId: product.sellerId },
-          orderBy: { createdAt: "desc" },
-        }),
-    queryRows<DbProduct>(
-      `
-        SELECT ${productColumns}
-        FROM "Product"
-        WHERE "id" <> $1 AND "status" = 'ACTIVE' AND ("brand" = $2 OR "category" = $3)
-        ORDER BY "popularityScore" DESC, "createdAt" DESC
-        LIMIT 4
-      `,
-      [product.id, product.brand, product.category],
-    ),
-  ]);
+  try {
+    const [productWithRelations] = await attachProductRelations([product]);
+    const [reviews, related] = await Promise.all([
+      product.shopId
+        ? getPrisma().review.findMany({
+            where: { targetShopId: product.shopId },
+            orderBy: { createdAt: "desc" },
+          })
+        : getPrisma().review.findMany({
+            where: { targetUserId: product.sellerId },
+            orderBy: { createdAt: "desc" },
+          }),
+      queryRows<DbProduct>(
+        `
+          SELECT ${productColumns}
+          FROM "Product"
+          WHERE "id" <> $1 AND "status" = 'ACTIVE' AND ("brand" = $2 OR "category" = $3)
+          ORDER BY "popularityScore" DESC, "createdAt" DESC
+          LIMIT 4
+        `,
+        [product.id, product.brand, product.category],
+      ),
+    ]);
 
-  return {
-    product: mapProduct(productWithRelations),
-    seller: makeSeller(productWithRelations),
-    reviews: reviews.map(mapReview),
-    related: (await attachProductRelations(related)).map(mapProduct),
-  };
+    return {
+      product: mapProduct(productWithRelations),
+      seller: makeSeller(productWithRelations),
+      reviews: reviews.map(mapReview),
+      related: (await attachProductRelations(related)).map(mapProduct),
+    };
+  } catch (error) {
+    logDataError("getProductPageData.relations", error, { route: "/product/[id]", productId: product.id });
+    throw error;
+  }
 }
 
 export async function getShopPageData(slug: string) {
@@ -328,15 +359,17 @@ async function attachProductRelations<T extends DbProduct>(products: T[]) {
     return products;
   }
 
-  const [sellers, shops] = await Promise.all([
+  const [sellers, shops, images] = await Promise.all([
     getUsersByIds(products.map((product) => product.sellerId)),
     getShopsByIds(products.flatMap((product) => (product.shopId ? [product.shopId] : []))),
+    getProductImagesByProductIds(products.map((product) => product.id)),
   ]);
 
   return products.map((product) => ({
     ...product,
     seller: sellers.get(product.sellerId),
     shop: product.shopId ? (shops.get(product.shopId) ?? null) : null,
+    images: images.get(product.id) ?? [],
   }));
 }
 
@@ -418,7 +451,41 @@ async function getProductsByIds(ids: string[]) {
   return new Map(products.map((product) => [product.id, product]));
 }
 
+async function getProductImagesByProductIds(ids: string[]) {
+  const uniqueIds = [...new Set(ids)];
+
+  if (uniqueIds.length === 0) {
+    return new Map<string, ProductImage[]>();
+  }
+
+  const rows = await queryRows<ProductImage & { productId: string }>(
+    `
+      SELECT "id", "productId", "url", "alt"
+      FROM "ProductImage"
+      WHERE "productId" = ANY($1::text[])
+      ORDER BY "sortOrder" ASC
+    `,
+    [uniqueIds],
+  );
+
+  const images = new Map<string, ProductImage[]>();
+
+  for (const row of rows) {
+    const list = images.get(row.productId) ?? [];
+    list.push({
+      id: row.id,
+      url: row.url,
+      alt: row.alt,
+    });
+    images.set(row.productId, list);
+  }
+
+  return images;
+}
+
 export function mapProduct(product: DbProduct): Product {
+  const dealMethods = normalizeDealMethods(product.dealMethods);
+
   return {
     id: product.id,
     sellerId: product.sellerId,
@@ -435,12 +502,33 @@ export function mapProduct(product: DbProduct): Product {
     city: product.city,
     description: product.description,
     status: product.status,
-    dealMethods: product.dealMethods.length > 0 ? product.dealMethods : ["DIRECT"],
-    images: [{ id: `${product.id}-placeholder`, alt: product.title }],
+    dealMethods,
+    images:
+      product.images && product.images.length > 0
+        ? product.images
+        : [{ id: `${product.id}-placeholder`, alt: product.title }],
     popularityScore: product.popularityScore,
     createdAt: product.createdAt.toISOString(),
     seller: product.seller ? makeSeller(product) : undefined,
   };
+}
+
+function normalizeDealMethods(methods: DbProduct["dealMethods"]): Product["dealMethods"] {
+  if (Array.isArray(methods)) {
+    return methods.length > 0 ? methods : ["DIRECT"];
+  }
+
+  if (typeof methods === "string") {
+    const parsed = methods
+      .replace(/^\{|\}$/g, "")
+      .split(",")
+      .map((method) => method.trim())
+      .filter(Boolean);
+
+    return parsed.length > 0 ? (parsed as Product["dealMethods"]) : ["DIRECT"];
+  }
+
+  return ["DIRECT"];
 }
 
 function mapShop(shop: DbShop): Shop {

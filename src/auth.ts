@@ -1,5 +1,5 @@
 import NextAuth from "next-auth";
-import type { Adapter, AdapterUser } from "next-auth/adapters";
+import type { Adapter, AdapterAccount, AdapterUser } from "next-auth/adapters";
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { getPrisma } from "@/lib/prisma";
 import { makeDisplayName } from "@/lib/usernames";
@@ -24,8 +24,76 @@ type TelegramAdapterUser = AdapterUser & {
   avatarUrl?: string | null;
 };
 
+const REDACTED_LOG_KEYS = new Set([
+  "access_token",
+  "client_secret",
+  "code",
+  "id_token",
+  "password",
+  "refresh_token",
+]);
+
 function getTelegramProfileId(profile: TelegramOidcProfile) {
   return String(profile.id ?? profile.sub ?? "");
+}
+
+function sanitizeForAuthLog(value: unknown, depth = 0): unknown {
+  if (depth > 4) {
+    return "[depth-limit]";
+  }
+
+  if (value instanceof Error) {
+    return {
+      name: value.name,
+      message: value.message,
+      stack: value.stack,
+      cause: sanitizeForAuthLog(value.cause, depth + 1),
+    };
+  }
+
+  if (Array.isArray(value)) {
+    return value.map((item) => sanitizeForAuthLog(item, depth + 1));
+  }
+
+  if (typeof value === "object" && value !== null) {
+    return Object.fromEntries(
+      Object.entries(value).map(([key, item]) => [
+        key,
+        REDACTED_LOG_KEYS.has(key.toLowerCase())
+          ? "[redacted]"
+          : sanitizeForAuthLog(item, depth + 1),
+      ]),
+    );
+  }
+
+  return value;
+}
+
+function logAuthError(error: Error, metadata?: unknown) {
+  console.error("[auth][error]", {
+    error: sanitizeForAuthLog(error),
+    name: error.name,
+    message: error.message,
+    stack: error.stack,
+    cause: sanitizeForAuthLog(error.cause),
+    metadata: sanitizeForAuthLog(metadata),
+  });
+}
+
+function toPrismaAdapterAccount(data: AdapterAccount): AdapterAccount {
+  return {
+    access_token: data.access_token,
+    expires_at: data.expires_at,
+    id_token: data.id_token,
+    provider: data.provider,
+    providerAccountId: data.providerAccountId,
+    refresh_token: data.refresh_token,
+    scope: data.scope,
+    session_state: data.session_state,
+    token_type: data.token_type,
+    type: data.type,
+    userId: data.userId,
+  };
 }
 
 function mapTelegramProfile(profile: TelegramOidcProfile) {
@@ -89,6 +157,9 @@ function getAdapter() {
 
       return adapter.createUser?.(user) as Promise<AdapterUser>;
     },
+    linkAccount(account) {
+      return adapter.linkAccount?.(toPrismaAdapterAccount(account));
+    },
   } satisfies Adapter;
 }
 
@@ -136,40 +207,48 @@ export const {
   ],
   events: {
     async signIn({ user, profile, account }) {
-      if (account?.provider !== "telegram" || !profile || !user.id) {
-        return;
-      }
+      try {
+        if (account?.provider !== "telegram" || !profile || !user.id) {
+          return;
+        }
 
-      const telegramProfile = profile as TelegramOidcProfile;
-      const telegramId = getTelegramProfileId(telegramProfile);
+        const telegramProfile = profile as TelegramOidcProfile;
+        const telegramId = getTelegramProfileId(telegramProfile);
 
-      if (!telegramId) {
-        return;
-      }
+        if (!telegramId) {
+          return;
+        }
 
-      const firstName = telegramProfile.given_name ?? null;
-      const lastName = telegramProfile.family_name ?? null;
-      const telegramUsername = telegramProfile.preferred_username ?? null;
-      const displayName =
-        telegramProfile.name ??
-        makeDisplayName({
-          firstName: firstName ?? undefined,
-          lastName: lastName ?? undefined,
-          username: telegramUsername ?? undefined,
+        const firstName = telegramProfile.given_name ?? null;
+        const lastName = telegramProfile.family_name ?? null;
+        const telegramUsername = telegramProfile.preferred_username ?? null;
+        const displayName =
+          telegramProfile.name ??
+          makeDisplayName({
+            firstName: firstName ?? undefined,
+            lastName: lastName ?? undefined,
+            username: telegramUsername ?? undefined,
+          });
+
+        await getPrisma().user.update({
+          where: { id: user.id },
+          data: {
+            telegramId,
+            telegramUsername,
+            firstName,
+            lastName,
+            name: displayName,
+            image: telegramProfile.picture ?? null,
+            avatarUrl: telegramProfile.picture ?? null,
+          },
         });
-
-      await getPrisma().user.update({
-        where: { id: user.id },
-        data: {
-          telegramId,
-          telegramUsername,
-          firstName,
-          lastName,
-          name: displayName,
-          image: telegramProfile.picture ?? null,
-          avatarUrl: telegramProfile.picture ?? null,
-        },
-      });
+      } catch (error) {
+        logAuthError(error instanceof Error ? error : new Error(String(error)), {
+          stage: "events.signIn",
+          provider: account?.provider,
+          userId: user.id,
+        });
+      }
     },
   },
   callbacks: {
@@ -209,7 +288,12 @@ export const {
   },
   logger: {
     error(error) {
-      console.error("[auth]", error.name);
+      logAuthError(error);
+    },
+    debug(message, metadata) {
+      if (process.env.AUTH_DEBUG === "true") {
+        console.log("[auth][debug]", message, sanitizeForAuthLog(metadata));
+      }
     },
   },
 }));

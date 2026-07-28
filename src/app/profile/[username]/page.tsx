@@ -9,8 +9,8 @@ import { LinkButton } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ProductCard } from "@/components/ui/product-card";
 import { Rating } from "@/components/ui/rating";
-import { SafeImage } from "@/components/ui/safe-image";
 import { Tabs } from "@/components/ui/tabs";
+import { getCurrentUser } from "@/lib/auth";
 import { getProfilePageData } from "@/lib/market-data";
 import { formatDate } from "@/lib/utils";
 
@@ -44,18 +44,16 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
   }
 
   const { user, listings, reviews } = data;
+  const currentUser = await getCurrentUser();
+  const isOwnProfile = currentUser?.id === user.id;
 
   return (
     <div className="page-shell py-6 md:py-8">
       <section className="overflow-hidden rounded-[8px] border border-black/10 bg-white">
-        <div className="relative min-h-44 md:min-h-56">
-          <SafeImage
-            alt={`Обложка ${user.displayName}`}
-            fill
-            priority
-            sizes="(min-width: 768px) 86rem, 100vw"
-            className="object-cover"
-          />
+        <div
+          className="relative min-h-44 md:min-h-56"
+          style={{ backgroundColor: user.customization.profileBackgroundColor ?? "#F6F6F4" }}
+        >
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/12 to-transparent" />
         </div>
         <div className="grid gap-4 p-4 md:grid-cols-[auto_1fr] md:items-end">
@@ -166,11 +164,24 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
               </div>
             ),
           },
-          {
-            id: "customization",
-            label: "Оформление",
-            content: <ProfileCustomization />,
-          },
+          ...(isOwnProfile
+            ? [
+                {
+                  id: "customization",
+                  label: "Оформление",
+                  content: (
+                    <ProfileCustomization
+                      displayName={user.displayName}
+                      username={user.username}
+                      nicknameColor={user.customization.nicknameColor}
+                      profileBackgroundColor={user.customization.profileBackgroundColor ?? "#F6F6F4"}
+                      avatarUrl={user.avatarUrl}
+                      coverUrl={user.coverUrl}
+                    />
+                  ),
+                },
+              ]
+            : []),
         ]}
       />
     </div>

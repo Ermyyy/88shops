@@ -1,5 +1,5 @@
-import { logoutAction } from "@/lib/auth-actions";
+import { signOut } from "@/auth";
 
 export async function POST() {
-  await logoutAction();
+  return signOut({ redirectTo: "/auth" });
 }

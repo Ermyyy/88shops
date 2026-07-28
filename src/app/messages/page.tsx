@@ -1,52 +1,78 @@
 import type { Metadata } from "next";
-import { MessageCircle, Search } from "lucide-react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { EmptyState } from "@/components/ui/empty-state";
 import { LinkButton } from "@/components/ui/button";
+import { SafeImage } from "@/components/ui/safe-image";
+import { getConversationList, getCurrentUserId } from "@/lib/messages";
+import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Сообщения",
-  description: "Сообщения 88Shops.",
+  description: "Диалоги с продавцами и покупателями 88Shops.",
 };
 
-export default function MessagesPage() {
+export const dynamic = "force-dynamic";
+
+export default async function MessagesPage() {
+  const userId = await getCurrentUserId();
+
+  if (!userId) {
+    redirect("/auth?callbackUrl=%2Fmessages");
+  }
+
+  const conversations = await getConversationList(userId);
+
   return (
     <div className="page-shell py-6">
       <div className="mb-5 flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold text-black">Сообщения</h1>
-          <p className="mt-1 text-sm text-black/55">
-            Здесь будут диалоги с продавцами и покупателями.
-          </p>
+          <p className="mt-1 text-sm text-black/55">Пиши продавцам и договаривайся о покупке.</p>
         </div>
         <LinkButton href="/catalog" variant="secondary" size="sm">
           В каталог
         </LinkButton>
       </div>
 
-      <section className="grid min-h-[32rem] overflow-hidden rounded-[8px] border border-black/10 bg-white lg:grid-cols-[20rem_1fr]">
-        <aside className="border-b border-black/10 p-4 lg:border-b-0 lg:border-r">
-          <label className="flex min-h-10 items-center gap-2 rounded-[8px] border border-black/10 bg-[#f6f6f4] px-3">
-            <Search aria-hidden className="h-4 w-4 text-black/45" />
-            <span className="sr-only">Поиск диалогов</span>
-            <input
-              disabled
-              className="min-w-0 flex-1 bg-transparent text-sm outline-none placeholder:text-black/35"
-              placeholder="Поиск диалогов"
-            />
-          </label>
-          <div className="mt-4 rounded-[8px] border border-dashed border-black/12 p-4 text-sm leading-6 text-black/55">
-            Диалоги появятся здесь, когда будет подключен backend сообщений.
-          </div>
-        </aside>
-
-        <div className="flex flex-col items-center justify-center p-8 text-center">
-          <MessageCircle aria-hidden className="h-10 w-10 text-black/35" />
-          <h2 className="mt-4 text-xl font-bold text-black">Сообщения готовятся</h2>
-          <p className="mt-2 max-w-md text-sm leading-6 text-black/55">
-            Мы не показываем тестовые переписки. После подключения чатов здесь
-            будет карточка товара, история диалога и поле сообщения.
-          </p>
-        </div>
-      </section>
+      {conversations.length > 0 ? (
+        <section className="overflow-hidden rounded-[8px] border border-black/10 bg-white">
+          {conversations.map((conversation) => (
+            <Link
+              key={conversation.id}
+              href={`/messages/${conversation.id}`}
+              className="grid gap-3 border-b border-black/8 p-3 transition last:border-b-0 hover:bg-black/[0.03] sm:grid-cols-[4.5rem_1fr_auto]"
+            >
+              <div className="aspect-[4/5] overflow-hidden rounded-[8px] bg-black/[0.04]">
+                <SafeImage alt={conversation.productImageAlt} />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <p className="truncate font-semibold text-black">{conversation.companionName}</p>
+                  {conversation.unreadCount > 0 ? (
+                    <span className="grid h-5 min-w-5 place-items-center rounded-full bg-lime px-1 text-[11px] font-bold text-black">
+                      {conversation.unreadCount}
+                    </span>
+                  ) : null}
+                </div>
+                <p className="mt-1 truncate text-sm font-medium text-black/70">
+                  {conversation.productTitle}
+                </p>
+                <p className="mt-1 line-clamp-2 text-sm text-black/50">{conversation.lastMessageText}</p>
+              </div>
+              <time className="text-xs text-black/40 sm:text-right">
+                {formatDate(conversation.lastMessageAt)}
+              </time>
+            </Link>
+          ))}
+        </section>
+      ) : (
+        <EmptyState
+          title="Диалогов пока нет"
+          description="Открой товар и нажми «Написать продавцу»."
+          action={<LinkButton href="/catalog">Перейти в каталог</LinkButton>}
+        />
+      )}
     </div>
   );
 }

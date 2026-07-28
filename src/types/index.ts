@@ -32,6 +32,7 @@ export type ProductImage = {
 
 export type UserCustomization = {
   nicknameColor: string;
+  profileBackgroundColor?: string;
   avatarFrame: "none" | "graphite" | "lime" | "silver";
   emoji: string;
   coverStyle: "static" | "animated-coming-soon";

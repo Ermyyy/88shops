@@ -15,6 +15,7 @@ import {
   UserRound,
   X,
 } from "lucide-react";
+import { LogoutButton } from "@/components/auth/logout-button";
 import { LinkButton } from "@/components/ui/button";
 import { Drawer } from "@/components/ui/drawer";
 import { useFavoritesStore } from "@/store/favorites-store";
@@ -115,6 +116,7 @@ export function Header({ user }: HeaderProps) {
               <ListPlus aria-hidden className="h-4 w-4" />
               Разместить
             </LinkButton>
+            {isAuthenticated ? <LogoutButton className="ml-1" /> : null}
           </nav>
 
           <button
@@ -170,15 +172,7 @@ export function Header({ user }: HeaderProps) {
               );
             })}
             {isAuthenticated ? (
-              <form action="/logout" method="post" className="pt-2">
-                <button
-                  type="submit"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="flex min-h-12 w-full items-center justify-center rounded-[10px] border border-black/10 px-4 text-sm font-semibold text-black/60 transition hover:bg-black/[0.04]"
-                >
-                  Выйти
-                </button>
-              </form>
+              <LogoutButton className="pt-2" />
             ) : (
               <LinkButton href="/auth" variant="secondary" className="mt-2" onClick={() => setMobileMenuOpen(false)}>
                 Войти

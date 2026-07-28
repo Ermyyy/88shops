@@ -3,9 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { signIn } from "next-auth/react";
-import { Send, ShieldCheck } from "lucide-react";
+import { Phone, Send, ShieldCheck } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 
 type AuthFlowProps = {
   callbackUrl?: string;
@@ -15,6 +16,7 @@ type AuthFlowProps = {
 export function AuthFlow({ callbackUrl = "/catalog", initialError = "" }: AuthFlowProps) {
   const [error, setError] = useState(initialError);
   const [pendingTelegram, setPendingTelegram] = useState(false);
+  const [phoneOpen, setPhoneOpen] = useState(false);
 
   async function handleTelegramLogin() {
     setPendingTelegram(true);
@@ -26,7 +28,7 @@ export function AuthFlow({ callbackUrl = "/catalog", initialError = "" }: AuthFl
       });
     } catch (authError) {
       console.error("[telegram-oidc-auth]", authError);
-      setError("Сервер авторизации временно недоступен. Попробуй ещё раз.");
+      setError("Вход через Telegram временно недоступен. Попробуй ещё раз.");
       setPendingTelegram(false);
     }
   }
@@ -45,7 +47,7 @@ export function AuthFlow({ callbackUrl = "/catalog", initialError = "" }: AuthFl
           <h1 className="mt-5 text-2xl font-semibold text-black">Войти в 88Shops</h1>
 
           <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-black/60">
-            Один аккаунт для покупок, продаж, избранного и своего магазина.
+            Один аккаунт для покупок, продаж и избранного.
           </p>
         </div>
 
@@ -60,7 +62,29 @@ export function AuthFlow({ callbackUrl = "/catalog", initialError = "" }: AuthFl
             <Send aria-hidden="true" className="h-5 w-5" />
             {pendingTelegram ? "Открываем Telegram..." : "Продолжить с Telegram"}
           </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="lg"
+            className="w-full"
+            onClick={() => setPhoneOpen((value) => !value)}
+          >
+            <Phone aria-hidden="true" className="h-5 w-5" />
+            Войти по номеру
+          </Button>
         </div>
+
+        {phoneOpen ? (
+          <div className="mt-4 rounded-[8px] border border-black/10 bg-[#f6f6f4] p-3">
+            <label className="grid gap-2 text-sm font-semibold text-black/60">
+              Телефон
+              <Input inputMode="tel" placeholder="+7 999 123-45-67" disabled />
+            </label>
+            <p className="mt-3 text-sm leading-6 text-black/55">
+              Вход по номеру скоро появится. SMS пока не отправляем.
+            </p>
+          </div>
+        ) : null}
 
         {error ? (
           <p
@@ -80,8 +104,7 @@ export function AuthFlow({ callbackUrl = "/catalog", initialError = "" }: AuthFl
             href="/catalog"
             className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[8px] px-3 text-sm font-semibold text-black/60 transition hover:bg-black/[0.04] hover:text-black"
           >
-            <ShieldCheck aria-hidden="true" className="h-4 w-4" />
-            Вернуться в каталог
+            <ShieldCheck aria-hidden="true" className="h-4 w-4" />В каталог
           </Link>
         </div>
       </section>

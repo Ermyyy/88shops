@@ -23,6 +23,7 @@ type DbUser = {
   createdAt: Date;
   customization?: {
     nicknameColor: string;
+    profileBackgroundColor?: string;
     avatarFrame: string;
     emoji: string;
     animatedCoverFuture: boolean;
@@ -576,6 +577,7 @@ function mapUser(user: DbUser): User {
     createdAt: user.createdAt.toISOString(),
     customization: {
       nicknameColor: user.customization?.nicknameColor ?? "#111111",
+      profileBackgroundColor: user.customization?.profileBackgroundColor ?? "#F6F6F4",
       avatarFrame: normalizeAvatarFrame(user.customization?.avatarFrame),
       emoji: user.customization?.emoji ?? "*",
       coverStyle: user.customization?.animatedCoverFuture ? "animated-coming-soon" : "static",

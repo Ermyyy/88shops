@@ -2,6 +2,7 @@
 
 import { auth } from "@/auth";
 import { getPrisma } from "@/lib/prisma";
+import { assertModeratedText } from "@/lib/moderation/text-moderation";
 import { sellFormSchema, type SellFormValues } from "@/lib/validations";
 
 export async function createProductAction(values: Omit<SellFormValues, "photos">) {
@@ -22,6 +23,13 @@ export async function createProductAction(values: Omit<SellFormValues, "photos">
       ok: false,
       error: parsed.error.issues[0]?.message ?? "Проверь объявление",
     };
+  }
+
+  const moderationError =
+    assertModeratedText(parsed.data.title) ?? assertModeratedText(parsed.data.description);
+
+  if (moderationError) {
+    return { ok: false, error: moderationError };
   }
 
   const product = await getPrisma().product.create({

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
-const PUBLIC_PREFIXES = ["/auth", "/catalog", "/product", "/shops", "/about"];
+const PUBLIC_PREFIXES = ["/auth", "/catalog", "/product", "/shops", "/profile", "/about"];
 const AUTH_COOKIE_NAMES = [
   "authjs.session-token",
   "__Secure-authjs.session-token",

@@ -7,7 +7,9 @@
     "build": "prisma generate --config=./prisma.config.ts && next build",
     "postinstall": "prisma generate --config=./prisma.config.ts",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "cleanup:demo:dry-run": "jiti scripts/cleanup-demo-marketplace-data.ts",
+    "cleanup:demo": "jiti scripts/cleanup-demo-marketplace-data.ts --execute"
   },
   "prisma": {
     "seed": "jiti prisma/seed.ts"

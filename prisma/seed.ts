@@ -28,6 +28,10 @@ function assertProductionSeedAllowed() {
   if (production && process.env.ALLOW_PRODUCTION_SEED !== "true") {
     throw new Error("Refusing to seed production without ALLOW_PRODUCTION_SEED=true.");
   }
+
+  if (process.env.ALLOW_DEMO_SEED !== "true") {
+    throw new Error("Refusing to seed demo marketplace data without ALLOW_DEMO_SEED=true.");
+  }
 }
 
 async function query(sql: string, params: unknown[] = []) {
